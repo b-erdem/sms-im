@@ -3,9 +3,11 @@ package dev.erdem.smsim
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SmsManager
 import android.util.Log
+import androidx.core.database.getStringOrNull
 import org.phoenixframework.Channel
 import org.phoenixframework.Socket
 
@@ -46,18 +48,32 @@ class SmsPublisherService : Service() {
 
             if (conversations != null) {
                 Log.d("conversations count", conversations.count.toString())
-                while (conversations.moveToNext()) {
+                var conversationCounter = 0
+                while (conversations.moveToNext() && conversationCounter < 10) {
                     val threadId = conversations.getString(conversations.getColumnIndex("thread_id"))
                     val messages = contentResolver.query(Telephony.Sms.Conversations.CONTENT_URI.buildUpon().appendPath(threadId).build(), null, null, null, null)
-                    while (messages!!.moveToNext()) {
+                    var messageCounter = 0
+                    var person = ""
+                    while (messages!!.moveToNext() && messageCounter < 10) {
                         val address = messages.getString(messages.getColumnIndex("address"))
+                        if (messageCounter == 0) {
+                            val contactCursor = contentResolver.query(ContactsContract.Contacts.CONTENT_FILTER_URI.buildUpon().appendPath(address).build(), null, null, null, null)
+                            if (contactCursor!!.moveToFirst()) {
+                                person = contactCursor.getString(contactCursor.getColumnIndex("display_name"))
+                            }
+                        }
                         val creator = messages.getString(messages.getColumnIndex("creator"))
                         val date = messages.getString(messages.getColumnIndex("date"))
                         val body = messages.getString(messages.getColumnIndex("body"))
                         val type = messages.getString(messages.getColumnIndex("type"))
+
                         payload.putIfAbsent(address, mutableListOf())
-                        payload[address]!!.add(mapOf("address" to address, "body" to body, "date" to date, "creator" to creator, "type" to type))
+                        payload[address]!!.add(mapOf("address" to address, "body" to body, "date" to date, "creator" to creator, "type" to type, "person" to person))
+
+                        messageCounter += 1
                     }
+
+                    conversationCounter += 1
                 }
 
                 channel?.push("last_10", payload)

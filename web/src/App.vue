@@ -55,7 +55,7 @@ export default {
         this.activeConversation = this.conversations[Object.keys(this.conversations)[0]].sort((a, b) => a.date - b.date)
 
         this.conversationSnippets = Object.keys(conversations).map(conv => {
-          return {sender: conv, snippet: conversations[conv][0].body}
+          return {sender: conversations[conv][0].person || conversations[conv][0].address, snippet: conversations[conv][0].body}
         })
     })
     channel.join()
