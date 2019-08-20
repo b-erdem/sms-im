@@ -4,9 +4,9 @@
       <side-bar />
       <div class="messages">
         <search-bar />
-        <message-list-item v-for="snippet in conversationSnippets" :snippet="snippet" :key="snippet.sender" />
+        <message-list-item v-on:click.native="setActiveConversation(snippet)" v-for="snippet in conversationSnippets" :snippet="snippet" :key="snippet.sender" />
       </div>
-      <message-item-content :messages="activeConversation" />
+      <message-item-content @onSend="send" :messages="activeConversation" />
     </div>
   </div>
 </template>
@@ -55,9 +55,8 @@ export default {
       console.log("received last 10 messages ", conversations)
         this.conversations = conversations
         this.activeConversation = this.conversations[Object.keys(this.conversations)[0]].sort((a, b) => a.date - b.date)
-
         this.conversationSnippets = Object.keys(conversations).map(conv => {
-          return {sender: conversations[conv][0].person || conversations[conv][0].address, snippet: conversations[conv][0].body}
+          return {sender: conversations[conv][0].person, address: conversations[conv][0].address, snippet: conversations[conv][0].body}
         })
     })
     channel.join()
@@ -75,18 +74,23 @@ export default {
     last10Messages () {
       this.channel.push("last_10_messages", {}, 10000)
       .receive("ok", (conversations) => {
-        console.log("last_10_messages")
+        console.log("last_10_messages ", conversations)
       })
     },
-    send () {
-      console.log("send message: ", this.msg)
-      this.channel.push("new_msg", { message: this.msg, to: "6505551212" }, 10000)
+    send (message, address) {
+      console.log("send message: ", message, address)
+      this.channel.push("send_sms", { message: message, to: address }, 10000)
       .receive("ok", (msg) => {
         console.log("created message ", msg)
         this.messages.push(msg.message)
       })
       .receive("error", ({reason}) => console.log("failed join", reason) )
       .receive("timeout", () => console.log("Networking issue. Still waiting..."))
+    },
+
+    setActiveConversation(snippet) {
+      console.log("snippet ", snippet)
+      this.activeConversation = this.conversations[snippet.address].sort((a, b) => a.date - b.date)
     }
   }
 }
