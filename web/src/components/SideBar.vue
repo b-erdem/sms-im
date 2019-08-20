@@ -1,6 +1,6 @@
 <template>
   <div class="-align-self-stretch">
-    <div class="overlay" :class="{ '-active' : isMenuShow }"></div>
+    <div class="overlay" :class="{ '-active' : isMenuShow }" @click="closeMenu"></div>
     <div class="sidebar" :class="{ '-active' : isMenuShow }">
       <!-- <div class="profile-img">
       <img src="@/assets/img/profile.jpg" alt />
@@ -54,6 +54,9 @@ export default {
   methods: {
     toggleMenu () {
       this.isMenuShow = !this.isMenuShow
+    },
+    closeMenu () {
+      this.isMenuShow = false
     }
   }
 }
