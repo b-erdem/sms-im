@@ -1,11 +1,13 @@
 <template>
   <div id="app">
-    <side-bar />
-    <div class="messages">
-      <search-bar />
-      <message-list-item v-for="snippet in conversationSnippets" :snippet="snippet" :key="snippet.sender" />
+    <div class="wrapper">
+      <side-bar />
+      <div class="messages">
+        <search-bar />
+        <message-list-item v-for="snippet in conversationSnippets" :snippet="snippet" :key="snippet.sender" />
+      </div>
+      <message-item-content :messages="activeConversation" />
     </div>
-    <message-item-content :messages="activeConversation" />
   </div>
 </template>
 
@@ -90,9 +92,9 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
 @import'~bootstrap/dist/css/bootstrap.css';
-@import "./assets/css/style.css";
+@import "./assets/css/style.scss";
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

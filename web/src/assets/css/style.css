@@ -52,6 +52,7 @@ a {
   background-image: -moz-linear-gradient(90deg, #117ee7 0%, #108ef2 100%);
   background-image: -webkit-linear-gradient(90deg, #117ee7 0%, #108ef2 100%);
   background-image: -ms-linear-gradient(90deg, #117ee7 0%, #108ef2 100%);
+  background-image: -webkit-linear-gradient(90deg, #117ee7 0%, #108ef2 100%);
   box-shadow: 15px 15px 30px 0px rgba(1, 50, 101, 0.21);
   padding: 35px 0;
   position: relative; }
