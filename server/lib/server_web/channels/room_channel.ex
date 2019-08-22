@@ -14,6 +14,11 @@ defmodule ServerWeb.RoomChannel do
         {:noreply, socket}
     end
 
+    def handle_in("send_sms", payload, socket) do
+        broadcast!(socket, "send_sms", payload)
+        {:noreply, socket}
+    end
+
     def handle_in("contacts", %{"body" => body}, socket) do
         broadcast!(socket, "contacts", %{body: body})
         {:noreply, socket}
