@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+APP="smsim"
+
+BUILD_HOST="104.248.20.26"
+BUILD_USER="baris"
+BUILD_AT="/tmp/edeliver/smsim/builds"
+
+STAGING_HOSTS="104.248.20.26"
+STAGING_USER="baris"
+DELIVER_TO="/home/baris/smsim"
+
+# For *Phoenix* projects, symlink prod.secret.exs to our tmp source
+pre_erlang_get_and_update_deps() {
+  local _prod_secret_path="/home/baris/smsim/prod.secret.exs"
+  if [ "$TARGET_MIX_ENV" = "prod" ]; then
+    __sync_remote "
+      ln -sfn '$_prod_secret_path' '$BUILD_AT/config/prod.secret.exs'
+    "
+  fi
+}
