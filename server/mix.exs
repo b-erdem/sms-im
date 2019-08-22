@@ -19,9 +19,6 @@ defmodule Server.MixProject do
   def application do
     [
       mod: {Server.Application, []},
-      applications: [
-        :edeliver
-      ],
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -41,8 +38,7 @@ defmodule Server.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:pot, "~>0.10.1"},
-      {:edeliver, ">=1.6.0"},
-      {:distillery, "~> 2.0", warn_missing: false},
+      {:distillery, "~> 2.0"},
     ]
   end
 end
