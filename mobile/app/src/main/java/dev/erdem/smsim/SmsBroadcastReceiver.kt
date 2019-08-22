@@ -18,7 +18,7 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
 
         if (resultCode == Activity.RESULT_OK) {
             val data = intent.extras
-            val pdus = data!!.get("pdus") as Array<Any>?
+            val pdus = data!!.get("pdus") as Array<*>?
             for (i in pdus!!.indices) {
                 val smsMessage = SmsMessage.createFromPdu(pdus[i] as ByteArray)
                 val smsPublisherServiceIntent = Intent(context, SmsPublisherService::class.java)
