@@ -11,8 +11,10 @@ use Mix.Config
 # before starting your production server.
 config :server, ServerWeb.Endpoint,
   http: [:inet6, port: System.get_env("PORT") || 4000],
-  url: [host: "example.com", port: 80],
-
+  url: [host: "localhost", port: System.get_env("PORT")]
+  server: true,
+  root: ".",
+  version: Application.spec(:server, :vsn)
 # Do not print debug messages in production
 config :logger, level: :info
 
