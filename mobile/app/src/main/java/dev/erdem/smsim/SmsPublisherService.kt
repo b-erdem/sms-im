@@ -7,7 +7,6 @@ import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SmsManager
 import android.util.Log
-import androidx.core.database.getStringOrNull
 import org.phoenixframework.Channel
 import org.phoenixframework.Socket
 
@@ -21,7 +20,7 @@ class SmsPublisherService : Service() {
     }
 
     override fun onCreate() {
-        socket = Socket("http://192.168.1.8:4000/socket", mapOf())
+        socket = Socket("http://104.248.20.26:4000/socket", mapOf())
         socket!!.connect()
         Log.d("Socket", "connected")
 
@@ -29,14 +28,14 @@ class SmsPublisherService : Service() {
         channel!!.on("join") {
             Log.d("Channel", "joined")
         }
-        channel!!.on("new_msg") { message ->
-            Log.d("new_msg", "got new message")
+        channel!!.on("send_sms") { message ->
+            Log.d("send_sms", "got new message")
             val payload = message.payload
-            Log.d("new_msg payload ", message.payload.keys.toString())
+            Log.d("send_sms payload ", message.payload.keys.toString())
             val to = payload["to"]
             val msg = payload["message"]
-            Log.d("new_msg to ", to as String)
-            Log.d("new_msg message ", msg.toString())
+            Log.d("send_sms to ", to as String)
+            Log.d("send_sms message ", msg.toString())
             val smsManager = SmsManager.getDefault()
             smsManager.sendTextMessage(to as String?, null, msg as String?, null, null)
         }

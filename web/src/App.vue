@@ -40,7 +40,7 @@ export default {
   },
 
   created () {
-    const socket = new Socket("ws://192.168.1.8:4000/socket", {})
+    const socket = new Socket("ws://104.248.20.26:4000/socket", {})
     socket.onOpen(event => console.log("connected"))
     socket.onError(event => console.log("cannot connect"))
     socket.onClose(event => console.log("socket closed"))
