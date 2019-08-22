@@ -3,7 +3,7 @@ APP="smsim"
 
 BUILD_HOST="104.248.20.26"
 BUILD_USER="baris"
-BUILD_AT="/tmp/edeliver/smsim/builds"
+BUILD_AT="/tmp/edeliver/smsim/builds/server"
 
 STAGING_HOSTS="104.248.20.26"
 STAGING_USER="baris"
