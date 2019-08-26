@@ -39,6 +39,7 @@ defmodule Server.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:pot, "~>0.10.1"},
       {:distillery, "~> 2.0"},
+      {:eqrcode, "~> 0.1.6"},
     ]
   end
 end

@@ -1,12 +1,32 @@
 defmodule ServerWeb.RoomChannel do
     use Phoenix.Channel
+    alias ServerWeb.SessionServer
 
-    def join("room:lobby", _message, socket) do
-        {:ok, socket}
-    end
-
-    def join("room:" <> _room_id, _params, socket) do
-        {:ok, socket}
+    def join("room:" <> room_id, params, socket) do
+        secret = Application.get_env(:server, ServerWeb.Endpoint)[:secret_key_base]      
+        token = Map.get(params, "token")
+        case Phoenix.Token.verify(ServerWeb.Endpoint, secret, token, max_age: 86400) do
+            {:ok, rid} ->
+                if rid == room_id do
+                    case SessionServer.get(rid) do
+                        [] ->
+                            :error
+                        [{channel_id, counter} | _] when counter < 2 ->
+                            case SessionServer.update_counter(channel_id) do
+                                x when x < 3 ->
+                                    {:ok, socket}
+                                _ ->
+                                    :error
+                            end
+                        [{channel_id, _} | _] ->
+                            :error
+                    end
+                else
+                    {:error, "unauthorized"}
+                end
+            {:error, reason} ->
+                :error
+        end
     end
 
     def handle_in("new_msg", %{"message" => message, "to" => to}, socket) do
@@ -16,11 +36,6 @@ defmodule ServerWeb.RoomChannel do
 
     def handle_in("send_sms", payload, socket) do
         broadcast!(socket, "send_sms", payload)
-        {:noreply, socket}
-    end
-
-    def handle_in("contacts", %{"body" => body}, socket) do
-        broadcast!(socket, "contacts", %{body: body})
         {:noreply, socket}
     end
 

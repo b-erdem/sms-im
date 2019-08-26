@@ -9,10 +9,6 @@ import android.util.Log
 
 
 class SmsBroadcastReceiver : BroadcastReceiver() {
-    init {
-        Log.d("SMSBroadcastReceiver", "constructed.")
-    }
-
     override fun onReceive(context: Context, intent: Intent) {
         Log.d("Receiver: ", "onReceive Method Called.")
 

@@ -7,5 +7,6 @@ defmodule ServerWeb.Router do
 
   scope "/api", ServerWeb do
     pipe_through :api
+    get "/auth/generate_qr_code", AuthController, :generate_qr_code
   end
 end
