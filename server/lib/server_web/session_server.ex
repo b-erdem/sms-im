@@ -1,5 +1,8 @@
 defmodule ServerWeb.SessionServer do
     use GenServer
+     
+    # TODO: The user should complete connection setup in a few minutes.
+    # Cleanup channel ids that didn't updated in a few minutes.
     
     def start_link(_) do
         GenServer.start_link(__MODULE__, %{}, name: __MODULE__)

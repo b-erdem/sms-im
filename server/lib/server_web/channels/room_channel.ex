@@ -8,6 +8,12 @@ defmodule ServerWeb.RoomChannel do
         case Phoenix.Token.verify(ServerWeb.Endpoint, secret, token, max_age: 86400) do
             {:ok, rid} ->
                 if rid == room_id do
+                    # At most 2 subscribers allowed for one channel.
+                    # One for web, and one for mobile.
+                    # This can be changed in the future.
+                    # Maybe some users would want messaging from their computers
+                    # and their iPads at the same time.
+                    # In this case we should show all subscribers in the mobile app. 
                     case SessionServer.get(rid) do
                         [] ->
                             :error
