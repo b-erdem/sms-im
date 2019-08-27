@@ -1,51 +1,56 @@
 package dev.erdem.smsim
 
 import android.content.ContentResolver
+import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
 
-data class SmsConversationInfo(val thread_id: String, val msg_count: String, val snippet: String, val person: String)
+data class SmsConversationInfo(val thread_id: String, val msg_count: String, val snippet: String, val date: String, val read: String, val person: String)
 
 data class SmsMessage(val address: String, val date: String, val body: String, val type: String)
 
 class SmsContentResolver(private val contentResolver: ContentResolver) {
-    fun getConversations(count: Int = 10): List<SmsConversationInfo> {
+    private val PROJECTION = arrayOf("_id", "date", "message_count", "recipient_ids", "snippet", "read")
+
+    fun getConversations(position: Int = 0, count: Int = 10): List<SmsConversationInfo> {
         val conversations = mutableListOf<SmsConversationInfo>()
-        var counter = 0
-        val conversationsCursor = contentResolver.query(Telephony.Sms.Conversations.CONTENT_URI, null, null, null, null)
-        while (conversationsCursor!!.moveToNext() && counter < count) {
-            val threadId = conversationsCursor.getString(conversationsCursor.getColumnIndex("thread_id"))
-            val msgCount = conversationsCursor.getString(conversationsCursor.getColumnIndex("msg_count"))
-            val snippet = conversationsCursor.getString(conversationsCursor.getColumnIndex("snippet"))
+        val cCursor = contentResolver.query(Uri.parse("content://mms-sms/conversations?simple=true"), PROJECTION, null, null,
+            "date DESC limit $count offset $position"
+        )
+        while (cCursor!!.moveToNext()) {
+            val threadId = cCursor.getString(cCursor.getColumnIndex("_id"))
+            val msgCount = cCursor.getString(cCursor.getColumnIndex("message_count"))
+            val snippet = cCursor.getString(cCursor.getColumnIndex("snippet"))
+            val date = cCursor.getString(cCursor.getColumnIndex("date"))
+            val read = cCursor.getString(cCursor.getColumnIndex("read"))
+
+            val recipients = cCursor.getString(cCursor.getColumnIndex("recipient_ids"))
 
             val person = getPerson(threadId)
-            conversations.add(SmsConversationInfo(threadId, msgCount, snippet, person))
-            counter += 1
+            conversations.add(SmsConversationInfo(threadId, msgCount, snippet, date, read, person))
         }
         return conversations
     }
 
-    fun getMessagesByThreadId(threadId: String, count: Int = 10): List<SmsMessage> {
+    fun getMessagesByThreadId(threadId: String, position: Int = 0, count: Int = 10): List<SmsMessage> {
         val messages = mutableListOf<SmsMessage>()
-        var counter = 0
 
-        val messagesCursor = contentResolver.query(Telephony.Sms.Conversations.CONTENT_URI.buildUpon().appendPath(threadId).build(), null, null, null, null)
+        val mCursor = contentResolver.query(Telephony.Sms.Conversations.CONTENT_URI.buildUpon().appendPath(threadId).build(), null, null, null, "date DESC limit $count OFFSET $position")
 
-        while (messagesCursor!!.moveToNext() && counter < count) {
-            val address = messagesCursor.getString(messagesCursor.getColumnIndex("address"))
-            val date = messagesCursor.getString(messagesCursor.getColumnIndex("date"))
-            val body = messagesCursor.getString(messagesCursor.getColumnIndex("body"))
-            val type = messagesCursor.getString(messagesCursor.getColumnIndex("type"))
+        while (mCursor!!.moveToNext()) {
+            val address = mCursor.getString(mCursor.getColumnIndex("address"))
+            val date = mCursor.getString(mCursor.getColumnIndex("date"))
+            val body = mCursor.getString(mCursor.getColumnIndex("body"))
+            val type = mCursor.getString(mCursor.getColumnIndex("type"))
 
             messages.add(SmsMessage(address, date, body, type))
-            counter += 1
         }
 
         return messages
     }
 
     private fun getPerson(threadId: String): String {
-        val message = getMessagesByThreadId(threadId, 1).first()
+        val message = getMessagesByThreadId(threadId, count = 1).first()
         val contactCursor = contentResolver.query(
             ContactsContract.Contacts.CONTENT_FILTER_URI.buildUpon().appendPath(message.address).build(),
             null,
