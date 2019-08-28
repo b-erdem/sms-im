@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "274045848394",
+    "firebase_url": "https://smsim-d4724.firebaseio.com",
+    "project_id": "smsim-d4724",
+    "storage_bucket": "smsim-d4724.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:274045848394:android:c23ff79b10f8ebb8",
+        "android_client_info": {
+          "package_name": "dev.erdem.smsim"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "274045848394-39l7h55ffi8me8sgb1ud0dknbadj7t89.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBs0_R5HOgUPfWpbMqvsi__dqYnFquu_Mc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "274045848394-39l7h55ffi8me8sgb1ud0dknbadj7t89.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

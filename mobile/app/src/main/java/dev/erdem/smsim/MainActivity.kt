@@ -10,28 +10,26 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import kotlinx.android.synthetic.main.activity_main.*
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mServiceIntent: Intent
     private var smsPublisherService: SmsPublisherService? = null
+
+    private var cameraSource: CameraSource? = null
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        smsPublisherService = SmsPublisherService(/*getApplicationContext() */)
-        mServiceIntent = Intent(applicationContext, smsPublisherService!!.javaClass)
-
-        if (!isSmsServiceRunning(smsPublisherService!!.javaClass)) {
-            startService(mServiceIntent)
-        }
-
-        val permissions = arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS)
+        val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS)
         requestPermissions(permissions, 1)
 
 
-        if (checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    Activity#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -41,6 +39,28 @@ class MainActivity : AppCompatActivity() {
             // for Activity#requestPermissions for more details.
             return
         }
+
+        cameraSource = CameraSource(this, fireFaceOverlay)
+
+        cameraSource?.setMachineLearningFrameProcessor(BarcodeScanningProcessor())
+        cameraSource?.let {
+            try {
+                Log.i("cameraSource", "before start")
+                firePreview?.start(cameraSource!!, fireFaceOverlay)
+            } catch (e: IOException) {
+                Log.e("BarCode","Unable to start camera")
+                cameraSource?.release()
+                cameraSource = null
+            }
+        }
+        smsPublisherService = SmsPublisherService(/*getApplicationContext() */)
+        mServiceIntent = Intent(applicationContext, smsPublisherService!!.javaClass)
+
+        if (!isSmsServiceRunning(smsPublisherService!!.javaClass)) {
+            startService(mServiceIntent)
+        }
+
+
     }
 
     private fun isSmsServiceRunning(serviceClass: Class<*>): Boolean {
@@ -50,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         }
+
         return false
     }
 
