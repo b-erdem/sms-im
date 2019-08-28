@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <div v-if="svg" v-html="svg"></div>
     <div class="wrapper">
       <side-bar />
       <div class="messages">
@@ -36,38 +37,42 @@ export default {
       conversations: {},
       conversationSnippets: [],
       activeConversation: null,
+      svg: ""
     }
   },
 
   created () {
-    const socket = new Socket("ws://104.248.20.26:4000/socket", {})
-    socket.onOpen(event => console.log("connected"))
-    socket.onError(event => console.log("cannot connect"))
-    socket.onClose(event => console.log("socket closed"))
-    socket.connect({})
+    fetch("http://192.168.1.8:4000/api/auth/generate_qr_code")
+    .then(resp => resp.json())
+    .then(data => this.svg = data.qr_code_svg)
+    // const socket = new Socket("ws://104.248.20.26:4000/socket", {})
+    // socket.onOpen(event => console.log("connected"))
+    // socket.onError(event => console.log("cannot connect"))
+    // socket.onClose(event => console.log("socket closed"))
+    // socket.connect({})
 
-    const channel = socket.channel("room:lobby")
-    channel.on("new_msg", msg => {
-      console.log("got message ", msg)
-      this.messages.push(msg.message)
-    })
-    channel.on("last_10", conversations => {
-      console.log("received last 10 messages ", conversations)
-        this.conversations = conversations
-        this.activeConversation = this.conversations[Object.keys(this.conversations)[0]].sort((a, b) => a.date - b.date)
-        this.conversationSnippets = Object.keys(conversations).map(conv => {
-          return {sender: conversations[conv][0].person, address: conversations[conv][0].address, snippet: conversations[conv][0].body}
-        })
-    })
-    channel.join()
-    .receive("ok", ({ messages }) => {
-       console.log("catching up ", messages)
-       this.last10Messages()
-    })
-    .receive("error", ({ reason }) => console.log("failed join", reason))
-    .receive("timeout", () => console.log("networking issue"))
-    this.socket = socket
-    this.channel = channel
+    // const channel = socket.channel("room:lobby")
+    // channel.on("new_msg", msg => {
+    //   console.log("got message ", msg)
+    //   this.messages.push(msg.message)
+    // })
+    // channel.on("last_10", conversations => {
+    //   console.log("received last 10 messages ", conversations)
+    //     this.conversations = conversations
+    //     this.activeConversation = this.conversations[Object.keys(this.conversations)[0]].sort((a, b) => a.date - b.date)
+    //     this.conversationSnippets = Object.keys(conversations).map(conv => {
+    //       return {sender: conversations[conv][0].person, address: conversations[conv][0].address, snippet: conversations[conv][0].body}
+    //     })
+    // })
+    // channel.join()
+    // .receive("ok", ({ messages }) => {
+    //    console.log("catching up ", messages)
+    //    this.last10Messages()
+    // })
+    // .receive("error", ({ reason }) => console.log("failed join", reason))
+    // .receive("timeout", () => console.log("networking issue"))
+    // this.socket = socket
+    // this.channel = channel
   },
 
   methods: {

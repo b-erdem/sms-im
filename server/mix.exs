@@ -40,6 +40,7 @@ defmodule Server.MixProject do
       {:pot, "~>0.10.1"},
       {:distillery, "~> 2.0"},
       {:eqrcode, "~> 0.1.6"},
+      {:cors_plug, "~> 2.0"},
     ]
   end
 end

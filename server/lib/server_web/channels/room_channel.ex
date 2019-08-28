@@ -3,6 +3,29 @@ defmodule ServerWeb.RoomChannel do
     alias ServerWeb.SessionServer
 
     def join("room:" <> room_id, params, socket) do
+        # At most 2 subscribers allowed for one channel.
+        # One for web, and one for mobile.
+        # This can be changed in the future.
+        # Maybe some users would want messaging from their computers
+        # and their iPads at the same time.
+        # In this case we should show all subscribers in the mobile app. 
+        case SessionServer.get(room_id) do
+            [] ->
+                :error
+            [{channel_id, counter} | _] when counter < 2 ->
+                case SessionServer.update_counter(channel_id) do
+                    x when x < 3 ->
+                        {:ok, socket}
+                    _ ->
+                        :error
+                end
+            [{channel_id, _} | _] ->
+                :error
+        end
+    end
+
+    # Join with Phoenix.Token disable temporarily.
+    defp join("room:" <> room_id, params, socket) do
         secret = Application.get_env(:server, ServerWeb.Endpoint)[:secret_key_base]      
         token = Map.get(params, "token")
         case Phoenix.Token.verify(ServerWeb.Endpoint, secret, token, max_age: 86400) do

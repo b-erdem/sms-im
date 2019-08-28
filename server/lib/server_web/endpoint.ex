@@ -40,5 +40,7 @@ defmodule ServerWeb.Endpoint do
     key: "_server_key",
     signing_salt: "I65TXUst"
 
+  plug CORSPlug
+
   plug ServerWeb.Router
 end
