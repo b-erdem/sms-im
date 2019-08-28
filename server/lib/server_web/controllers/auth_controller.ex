@@ -24,8 +24,8 @@ defmodule ServerWeb.AuthController do
         channel_id = :crypto.hash(:sha256, secret) |> Base.encode16
         auth_token = Phoenix.Token.sign(ServerWeb.Endpoint, secret_key_base, channel_id)
         qr_code_svg = channel_id
-        |> EQRCode.encode
-        |> EQRCode.svg
+        |> EQRCode.encode()
+        |> EQRCode.svg(width: 264)
         
         case SessionServer.insert(channel_id, 0) do
             true ->
