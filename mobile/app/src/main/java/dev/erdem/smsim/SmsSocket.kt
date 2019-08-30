@@ -8,6 +8,7 @@ import org.phoenixframework.Socket
 data class SmsConversation(val info: SmsConversationInfo, val messages: List<SmsMessage>)
 
 class SmsSocket(private val smsContentResolver: SmsContentResolver) {
+    var isJoinedChannel: Boolean = false
     private var socket : Socket = Socket("http://104.248.20.26:4000/socket", mapOf())
     private var channel : Channel? = null
 
@@ -49,12 +50,13 @@ class SmsSocket(private val smsContentResolver: SmsContentResolver) {
 
         channel.join().receive("ok") {
             Log.d("Channel", "successfully joined.")
+            isJoinedChannel = true
         }
 
         this.channel = channel
     }
 
-    fun pushMessage(to: String?, msg: String) {
-        channel?.push("new_msg", mapOf("msg" to msg, "to" to to!!))
+    fun pushMessage(to: String, body: String, timestamp: String) {
+        channel?.push("new_msg", mapOf("body" to body, "to" to to, "timestamp" to timestamp))
     }
 }

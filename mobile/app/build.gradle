@@ -36,8 +36,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    implementation 'com.google.firebase:firebase-ml-vision:23.0.0'
+    implementation 'com.google.android.gms:play-services-vision:18.0.0'
     implementation 'com.github.dsrees:JavaPhoenixClient:0.3.2'
 }
-
-apply plugin: 'com.google.gms.google-services'

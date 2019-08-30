@@ -2,7 +2,7 @@ defmodule ServerWeb.RoomChannel do
     use Phoenix.Channel
     alias ServerWeb.SessionServer
 
-    def join("room:" <> room_id, params, socket) do
+    def join("room:" <> room_id, _params, socket) do
         # At most 2 subscribers allowed for one channel.
         # One for web, and one for mobile.
         # This can be changed in the future.

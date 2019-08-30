@@ -38,7 +38,7 @@ defmodule ServerWeb.SessionServer do
     end
 
     def handle_call({:update_counter, key}, _from, state) do
-        {:reply, :ets.update_counter(:sessions_table, key, 1, {1, 0})}
+        {:reply, :ets.update_counter(:sessions_table, key, 1, {1, 0}), state}
     end
 
     def handle_call({:delete, key}, _from, state) do

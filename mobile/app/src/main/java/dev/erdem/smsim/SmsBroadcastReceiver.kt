@@ -4,9 +4,8 @@ import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.telephony.SmsMessage
 import android.util.Log
-
+import android.provider.Telephony
 
 class SmsBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -16,12 +15,14 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
             val data = intent.extras
             val pdus = data!!.get("pdus") as Array<*>?
             for (i in pdus!!.indices) {
-                val smsMessage = SmsMessage.createFromPdu(pdus[i] as ByteArray)
-                val smsPublisherServiceIntent = Intent(context, SmsPublisherService::class.java)
-                smsPublisherServiceIntent.putExtra("from", smsMessage.emailFrom) /* put id of sms */
-                smsPublisherServiceIntent.putExtra("to", smsMessage.displayOriginatingAddress)
-                smsPublisherServiceIntent.putExtra("msg", smsMessage.messageBody)
-                context.startService(smsPublisherServiceIntent)
+                val smsMessage = Telephony.Sms.Intents.getMessagesFromIntent(intent)[i]
+                // context.startService()
+                val returnIntent = Intent("dev.erdem.smsim.SmsReceiver")
+                returnIntent.putExtra("from", smsMessage.emailFrom)
+                returnIntent.putExtra("to", smsMessage.displayOriginatingAddress)
+                returnIntent.putExtra("body", smsMessage.messageBody)
+                returnIntent.putExtra("timestamp", smsMessage.timestampMillis)
+                context.sendBroadcast(returnIntent)
             }
         }
     }
