@@ -1,6 +1,6 @@
 <template>
   <a href="#" class="messages__item">
-    <div class="name">{{ snippet.sender }}</div>
+    <div class="name">{{ snippet.person }}</div>
     <div class="date">1h ago</div>
 
     <div

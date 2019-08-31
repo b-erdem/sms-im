@@ -2,7 +2,7 @@ defmodule ServerWeb.RoomChannel do
     use Phoenix.Channel
     alias ServerWeb.SessionServer
 
-    def join("room:" <> room_id, _params, socket) do
+    def join("room:" <> room_id, params, socket) do
         # At most 2 subscribers allowed for one channel.
         # One for web, and one for mobile.
         # This can be changed in the future.
@@ -11,16 +11,17 @@ defmodule ServerWeb.RoomChannel do
         # In this case we should show all subscribers in the mobile app. 
         case SessionServer.get(room_id) do
             [] ->
-                :error
+                {:error, %{reason: "authorized"}}
             [{channel_id, counter} | _] when counter < 2 ->
                 case SessionServer.update_counter(channel_id) do
                     x when x < 3 ->
+                        send(self(), {:after_join, params})
                         {:ok, socket}
                     _ ->
-                        :error
+                        {:error, %{reason: "unauthorized"}}
                 end
             [{channel_id, _} | _] ->
-                :error
+                {:error, %{reason: "unauthorized"}}
         end
     end
 
@@ -59,6 +60,12 @@ defmodule ServerWeb.RoomChannel do
     #             :error
     #     end
     # end
+
+    def handle_info({:after_join, params}, socket) do
+        broadcast!(socket, "user_entered", params)
+        push socket, "join", %{status: "connected"}
+        {:noreply, socket}
+      end    
 
     def handle_in("new_msg", %{"message" => message, "to" => to}, socket) do
         broadcast!(socket, "new_msg", %{message: message, to: to})

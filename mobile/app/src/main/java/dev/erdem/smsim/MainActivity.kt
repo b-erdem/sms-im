@@ -19,22 +19,12 @@ import org.phoenixframework.Socket
 data class SmsConversation(val info: SmsConversationInfo, val messages: List<SmsMessage>)
 
 class MainActivity : AppCompatActivity() {
-    private val socket = Socket("http://104.248.20.26:4000/socket", mapOf())
+    private val socket = Socket("http://192.168.1.5:4000/socket", mapOf())
     private var channel: Channel? = null
     private var isJoinedChannel = false
-    private val smsContentResolver = SmsContentResolver(contentResolver)
+    private var smsContentResolver: SmsContentResolver? = null
 
-    private var broadcastReceiver: BroadcastReceiver = object: BroadcastReceiver() {
-        override fun onReceive(p0: Context?, p1: Intent?) {
-            if (isJoinedChannel) {
-                val to = intent?.getStringExtra("to")!!
-                val from = intent.getStringExtra("from")!!
-                val body = intent.getStringExtra("body")!!
-                val timestamp = intent.getStringExtra("timestamp")!!
-                channel?.push("new_msg", mapOf("body" to body, "to" to to, "timestamp" to timestamp))
-            }
-        }
-    }
+    private var broadcastReceiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,11 +35,10 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(intent, 1)
         }
 
-        setupSocket()
+        smsContentResolver = SmsContentResolver(contentResolver)
 
-        val intentFilter = IntentFilter()
-        intentFilter.addAction("dev.erdem.smsim.SmsReceiver")
-        registerReceiver(broadcastReceiver, intentFilter)
+        setupLocalBroadcastReceiver()
+        setupSocket()
 
         val permissions = arrayOf(
             Manifest.permission.CAMERA,
@@ -63,6 +52,24 @@ class MainActivity : AppCompatActivity() {
         if (permissions.any { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }) {
             return
         }
+    }
+
+    private fun setupLocalBroadcastReceiver() {
+        broadcastReceiver = object: BroadcastReceiver() {
+            override fun onReceive(p0: Context?, p1: Intent?) {
+                if (isJoinedChannel) {
+                    val to = intent?.getStringExtra("to")!!
+                    val from = intent.getStringExtra("from")!!
+                    val body = intent.getStringExtra("body")!!
+                    val timestamp = intent.getStringExtra("timestamp")!!
+                    channel?.push("new_msg", mapOf("body" to body, "to" to to, "timestamp" to timestamp))
+                }
+            }
+        }
+
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("dev.erdem.smsim.SmsReceiver")
+        registerReceiver(broadcastReceiver, intentFilter)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -81,7 +88,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupChannel(channelId: String) {
-        val channel = socket.channel(channelId)
+        val channel = socket.channel("room:$channelId", mapOf("mobile" to true))
         channel.on("join") {
             Log.d("Channel", "joined")
         }
@@ -101,12 +108,14 @@ class MainActivity : AppCompatActivity() {
             val payload = mutableMapOf<String, MutableList<SmsConversation>>()
             payload["conversations"] = mutableListOf()
             Log.d("last_10_messages", "requested")
-            val conversations = smsContentResolver.getConversations()
-            Log.i("conversations length", conversations.size.toString())
-            for (conversation in conversations) {
-                val messages = smsContentResolver.getMessagesByThreadId(conversation.thread_id)
-                Log.i("messages length", messages.size.toString())
-                payload["conversations"]!!.add(SmsConversation(info = conversation, messages = messages))
+            val conversations = smsContentResolver?.getConversations()
+            Log.i("conversations length", conversations?.size.toString())
+            if (conversations != null) {
+                for (conversation in conversations) {
+                    val messages = smsContentResolver?.getMessagesByThreadId(conversation.thread_id)
+                    Log.i("messages length", messages?.size.toString())
+                    payload["conversations"]!!.add(SmsConversation(info = conversation, messages = messages!!))
+                }
             }
 
             channel.push("last_10", payload)
