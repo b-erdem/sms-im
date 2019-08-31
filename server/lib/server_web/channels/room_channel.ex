@@ -9,20 +9,22 @@ defmodule ServerWeb.RoomChannel do
         # Maybe some users would want messaging from their computers
         # and their iPads at the same time.
         # In this case we should show all subscribers in the mobile app. 
-        case SessionServer.get(room_id) do
-            [] ->
-                {:error, %{reason: "authorized"}}
-            [{channel_id, counter} | _] when counter < 2 ->
-                case SessionServer.update_counter(channel_id) do
-                    x when x < 3 ->
-                        send(self(), {:after_join, params})
-                        {:ok, socket}
-                    _ ->
-                        {:error, %{reason: "unauthorized"}}
-                end
-            [{channel_id, _} | _] ->
-                {:error, %{reason: "unauthorized"}}
-        end
+         send(self(), {:after_join, params})
+        {:ok, socket}
+        # case SessionServer.get(room_id) do
+        #     [] ->
+        #         {:error, %{reason: "authorized"}}
+        #     [{channel_id, counter} | _] when counter < 2 ->
+        #         case SessionServer.update_counter(channel_id) do
+        #             x when x < 3 ->
+        #                 send(self(), {:after_join, params})
+        #                 {:ok, socket}
+        #             _ ->
+        #                 {:error, %{reason: "unauthorized"}}
+        #         end
+        #     [{channel_id, _} | _] ->
+        #         {:error, %{reason: "unauthorized"}}
+        # end
     end
 
     # Join with Phoenix.Token disable temporarily.
