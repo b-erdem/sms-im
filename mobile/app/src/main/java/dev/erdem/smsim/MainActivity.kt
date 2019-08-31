@@ -19,7 +19,7 @@ import org.phoenixframework.Socket
 data class SmsConversation(val info: SmsConversationInfo, val messages: List<SmsMessage>)
 
 class MainActivity : AppCompatActivity() {
-    private val socket = Socket("http://192.168.1.5:4000/socket", mapOf())
+    private val socket = Socket("http://104.248.20.26:4000/socket", mapOf())
     private var channel: Channel? = null
     private var isJoinedChannel = false
     private var smsContentResolver: SmsContentResolver? = null

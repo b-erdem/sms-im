@@ -7,7 +7,7 @@
         <search-bar />
         <message-list-item v-on:click.native="setActiveConversation($index)" v-for="(snippet, $index) in conversationSnippets" :snippet="snippet" :key="snippet.person" />
       </div>
-      <message-item-content @onSend="send" :messages="activeConversation.messages" />
+      <message-item-content ref="messageContent" @onSend="send" :messages="activeConversation.messages" :person="activeConversation.info.person"/>
     </div>
   </div>
 </template>
@@ -45,23 +45,40 @@ export default {
   },
 
   created () {
-    fetch('http://192.168.1.5:4000/api/auth/generate_qr_code')
-      .then(resp => resp.json())
-      .then(data => {
-        this.svg = data.qr_code_svg
-        this.connect(data)
-      })
+    let channelId = localStorage.getItem('channel_id')
+    if (channelId) {
+      const data = {
+        channel_id: channelId,
+        re_use: true
+      }
+      this.connect(data);
+      console.log('if');
+    } else {
+      fetch('http://104.248.20.26:4000/api/auth/generate_qr_code')
+        .then(resp => resp.json())
+        .then(data => {
+          this.svg = data.qr_code_svg
+          this.connect(data)
+        })
+    }
   },
-
+  watch: {
+    activeConversation () {
+      this.setScrollPosition()
+    }
+  },
   methods: {
-    connect(data) {
-      const socket = new Socket("ws://192.168.1.5:4000/socket", {})
+    connect(params) {
+      let self = this
+      console.log("params ", params)
+      const socket = new Socket("ws://104.248.20.26:4000/socket", {})
       socket.onOpen(event => console.log("connected"))
       socket.onError(event => console.log("cannot connect"))
       socket.onClose(event => console.log("socket closed"))
       socket.connect({})
 
-      const channel = socket.channel("room:" + data.channel_id)
+      const channel = socket.channel("room:" + params.channel_id)
+      localStorage.setItem('channel_id', params.channel_id)
       channel.on("new_msg", msg => {
         console.log("got message ", msg)
         this.messages.push(msg.message)
@@ -70,7 +87,8 @@ export default {
         let conversations = data.conversations
         console.log("received last 10 messages ", conversations)
           this.conversations = conversations
-          this.activeConversation = this.conversations[0]
+          this.activeConversation = this.conversations[0].messages.sort((a, b) => a.date - b.date)
+          this.setActiveConversation(0)
           // this.activeConversation = this.conversations[Object.keys(this.conversations)[0]].sort((a, b) => a.date - b.date)
           // this.conversationSnippets = Object.keys(conversations).map(conv => {
           //   return {sender: conversations[conv][0].person, address: conversations[conv][0].address, snippet: conversations[conv][0].body}
@@ -86,7 +104,13 @@ export default {
       })
       channel.join()
       .receive("ok", ({ messages }) => {
-         console.log("catching up ", messages)
+         console.log("asfs up ", params.re_use)
+         console.log("reuse")
+         if (params.re_use) {
+           console.log("reuse")
+           self.isLoggedIn = true
+           self.last10Messages()
+         }
         //  this.last10Messages()
       })
       .receive("error", ({ reason }) => console.log("failed join", reason))
@@ -114,6 +138,13 @@ export default {
     setActiveConversation (index) {
       console.log('snippet index ', index)
       this.activeConversation = this.conversations[index]
+      this.setScrollPosition()
+    },
+    setScrollPosition () {
+      if (document.querySelector('.message-box__wrapper')) {
+        document.querySelector('.message-box').scrollTo(0, document.querySelector('.message-box__wrapper').offsetHeight)
+        console.log(document.querySelector('.message-box__wrapper').offsetHeight);
+      }
     }
   }
 }
