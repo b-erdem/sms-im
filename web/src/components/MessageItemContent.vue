@@ -31,10 +31,10 @@ export default {
   props: {
     messages: Array
   },
-  data() {
+  data () {
     return {
-      msg: ""
-    };
+      msg: ''
+    }
   }
-};
+}
 </script>

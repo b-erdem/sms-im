@@ -45,7 +45,7 @@
 </template>
 <script>
 export default {
-  name: "Sidebar",
+  name: 'Sidebar',
   data () {
     return {
       isMenuShow: false

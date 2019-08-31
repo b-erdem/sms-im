@@ -11,8 +11,8 @@
 
 <script>
 export default {
-    props: {
-        snippet: Object
-    }
+  props: {
+    snippet: Object
+  }
 }
 </script>

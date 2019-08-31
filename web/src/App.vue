@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <div v-if="svg" v-html="svg"></div>
-    <div class="wrapper">
+    <QrBox :svg="svg" v-if="!isLoggedIn"/>
+    <div class="wrapper" v-if="isLoggedIn">
       <side-bar />
       <div class="messages">
         <search-bar />
@@ -13,11 +13,12 @@
 </template>
 
 <script>
-import { Socket } from "phoenix"
-import SearchBar from "@/components/SearchBar"
-import SideBar from "@/components/SideBar"
-import MessageListItem from "@/components/MessageListItem"
-import MessageItemContent from "@/components/MessageItemContent"
+import { Socket } from 'phoenix'
+import SearchBar from '@/components/SearchBar'
+import SideBar from '@/components/SideBar'
+import MessageListItem from '@/components/MessageListItem'
+import MessageItemContent from '@/components/MessageItemContent'
+import QrBox from '@/components/QrBox'
 
 export default {
   name: 'app',
@@ -25,26 +26,28 @@ export default {
     SideBar,
     SearchBar,
     MessageListItem,
-    MessageItemContent
+    MessageItemContent,
+    QrBox
   },
   data () {
     return {
       messages: [],
-      msg: "",
+      msg: '',
       socket: null,
       channels: [],
       channel: null,
       conversations: {},
       conversationSnippets: [],
       activeConversation: null,
-      svg: ""
+      svg: '',
+      isLoggedIn: false
     }
   },
 
   created () {
-    fetch("http://192.168.1.8:4000/api/auth/generate_qr_code")
-    .then(resp => resp.json())
-    .then(data => this.svg = data.qr_code_svg)
+    fetch('http://104.248.20.26:4000/api/auth/generate_qr-box_code')
+      .then(resp => resp.json())
+      .then(data => this.svg = data.qr_code_svg)
     // const socket = new Socket("ws://104.248.20.26:4000/socket", {})
     // socket.onOpen(event => console.log("connected"))
     // socket.onError(event => console.log("cannot connect"))
@@ -77,24 +80,24 @@ export default {
 
   methods: {
     last10Messages () {
-      this.channel.push("last_10_messages", {}, 10000)
-      .receive("ok", (conversations) => {
-        console.log("last_10_messages ", conversations)
-      })
+      this.channel.push('last_10_messages', {}, 10000)
+        .receive('ok', (conversations) => {
+          console.log('last_10_messages ', conversations)
+        })
     },
     send (message, address) {
-      console.log("send message: ", message, address)
-      this.channel.push("send_sms", { message: message, to: address }, 10000)
-      .receive("ok", (msg) => {
-        console.log("created message ", msg)
-        this.messages.push(msg.message)
-      })
-      .receive("error", ({reason}) => console.log("failed join", reason) )
-      .receive("timeout", () => console.log("Networking issue. Still waiting..."))
+      console.log('send message: ', message, address)
+      this.channel.push('send_sms', { message: message, to: address }, 10000)
+        .receive('ok', (msg) => {
+          console.log('created message ', msg)
+          this.messages.push(msg.message)
+        })
+        .receive('error', ({ reason }) => console.log('failed join', reason))
+        .receive('timeout', () => console.log('Networking issue. Still waiting...'))
     },
 
-    setActiveConversation(snippet) {
-      console.log("snippet ", snippet)
+    setActiveConversation (snippet) {
+      console.log('snippet ', snippet)
       this.activeConversation = this.conversations[snippet.address].sort((a, b) => a.date - b.date)
     }
   }
@@ -102,14 +105,5 @@ export default {
 </script>
 
 <style lang="scss">
-@import'~bootstrap/dist/css/bootstrap.css';
-@import "./assets/css/style.scss";
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+@import "./assets/scss/style.scss";
 </style>
