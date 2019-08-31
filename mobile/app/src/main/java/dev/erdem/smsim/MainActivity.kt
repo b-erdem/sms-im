@@ -10,20 +10,28 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.telephony.SmsManager
 import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
+import org.phoenixframework.Channel
+import org.phoenixframework.Socket
+
+data class SmsConversation(val info: SmsConversationInfo, val messages: List<SmsMessage>)
 
 class MainActivity : AppCompatActivity() {
-    private var smsSocket = SmsSocket(SmsContentResolver(contentResolver))
+    private val socket = Socket("http://104.248.20.26:4000/socket", mapOf())
+    private var channel: Channel? = null
+    private var isJoinedChannel = false
+    private val smsContentResolver = SmsContentResolver(contentResolver)
 
     private var broadcastReceiver: BroadcastReceiver = object: BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
-            if (smsSocket.isJoinedChannel) {
+            if (isJoinedChannel) {
                 val to = intent?.getStringExtra("to")!!
                 val from = intent.getStringExtra("from")!!
                 val body = intent.getStringExtra("body")!!
                 val timestamp = intent.getStringExtra("timestamp")!!
-                smsSocket.pushMessage(to, body, timestamp)
+                channel?.push("new_msg", mapOf("body" to body, "to" to to, "timestamp" to timestamp))
             }
         }
     }
@@ -61,7 +69,7 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == 1) {
             if (resultCode == Activity.RESULT_OK) {
                 val channelId = data!!.getStringExtra("channel_id")!!
-                connectChannel(channelId)
+                setupChannel(channelId)
             } else {
                 Log.d("MainActivity.onActivityResult", "Couldn't detect QR Code.")
             }
@@ -69,25 +77,46 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSocket() {
-        smsSocket.connect()
+        socket.connect()
     }
 
-    private fun connectChannel(channelId: String) {
-        smsSocket.joinChannel(channelId)
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        if (broadcastReceiver != null) {
-            unregisterReceiver(broadcastReceiver)
+    private fun setupChannel(channelId: String) {
+        val channel = socket.channel(channelId)
+        channel.on("join") {
+            Log.d("Channel", "joined")
         }
-    }
 
-    override fun onResume() {
-        super.onResume()
-        val intentFilter = IntentFilter()
-        intentFilter.addAction("dev.erdem.smsim.SmsReceiver")
-        registerReceiver(broadcastReceiver, intentFilter)
+        channel.on("send_sms") { message ->
+            Log.d("send_sms", "got new message")
+            val payload = message.payload
+            val to = payload["to"]
+            val msg = payload["message"]
+            val smsManager = SmsManager.getDefault()
+            smsManager.sendTextMessage(to as String?, null, msg as String?, null, null)
+        }
+
+        channel.on("last_10_messages") {
+            Log.d("last_10_messages", "requested")
+
+            val payload = mutableMapOf<String, MutableList<SmsConversation>>()
+            payload["conversations"] = mutableListOf()
+            Log.d("last_10_messages", "requested")
+            val conversations = smsContentResolver.getConversations()
+            Log.i("conversations length", conversations.size.toString())
+            for (conversation in conversations) {
+                val messages = smsContentResolver.getMessagesByThreadId(conversation.thread_id)
+                Log.i("messages length", messages.size.toString())
+                payload["conversations"]!!.add(SmsConversation(info = conversation, messages = messages))
+            }
+
+            channel.push("last_10", payload)
+        }
+
+        channel.join().receive("ok") {
+            Log.d("Channel", "successfully joined.")
+            isJoinedChannel = true
+        }
+
+        this.channel = channel
     }
 }
