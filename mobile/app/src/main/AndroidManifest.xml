@@ -22,7 +22,11 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             android:usesCleartextTraffic="true">
-        <activity android:name=".QRCodeScannerActivity"></activity>
+        <service
+                android:name=".SmsPublisherService"
+                android:exported="false"></service>
+
+        <activity android:name=".QRCodeScannerActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

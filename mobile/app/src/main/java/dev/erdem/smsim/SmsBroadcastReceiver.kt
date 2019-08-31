@@ -16,13 +16,7 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
             val pdus = data!!.get("pdus") as Array<*>?
             for (i in pdus!!.indices) {
                 val smsMessage = Telephony.Sms.Intents.getMessagesFromIntent(intent)[i]
-                // context.startService()
-                val returnIntent = Intent("dev.erdem.smsim.SmsReceiver")
-                returnIntent.putExtra("from", smsMessage.emailFrom)
-                returnIntent.putExtra("to", smsMessage.displayOriginatingAddress)
-                returnIntent.putExtra("body", smsMessage.messageBody)
-                returnIntent.putExtra("timestamp", smsMessage.timestampMillis)
-                context.sendBroadcast(returnIntent)
+                SmsPublisherService.pushMessage(context, from = smsMessage.emailFrom, body = smsMessage.messageBody, timestamp = smsMessage.timestampMillis.toString())
             }
         }
     }
