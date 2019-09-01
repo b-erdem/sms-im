@@ -7,18 +7,20 @@
         <search-bar />
         <message-list-item v-on:click.native="setActiveConversation($index)" v-for="(snippet, $index) in conversationSnippets" :snippet="snippet" :key="snippet.person" />
       </div>
-      <message-item-content ref="messageContent" @onSend="send" :messages="activeConversation.messages" :person="activeConversation.info.person"/>
+      <message-item-content v-if="activeConversation" ref="messageContent" @onSend="send" :messages="activeConversation.messages" :person="activeConversation.info.person"/>
     </div>
   </div>
 </template>
 
 <script>
-import { Socket } from 'phoenix'
+import { Socket, Presence } from 'phoenix'
 import SearchBar from '@/components/SearchBar'
 import SideBar from '@/components/SideBar'
 import MessageListItem from '@/components/MessageListItem'
 import MessageItemContent from '@/components/MessageItemContent'
 import QrBox from '@/components/QrBox'
+
+import Bowser from 'bowser'
 
 export default {
   name: 'app',
@@ -45,22 +47,12 @@ export default {
   },
 
   created () {
-    let channelId = localStorage.getItem('channel_id')
-    if (channelId) {
-      const data = {
-        channel_id: channelId,
-        re_use: true
-      }
-      this.connect(data);
-      console.log('if');
-    } else {
-      fetch('http://104.248.20.26:4000/api/auth/generate_qr_code')
+      fetch('http://192.168.1.5:4000/api/auth/generate_qr_code')
         .then(resp => resp.json())
         .then(data => {
           this.svg = data.qr_code_svg
           this.connect(data)
         })
-    }
   },
   watch: {
     activeConversation () {
@@ -68,31 +60,53 @@ export default {
     }
   },
   methods: {
+    getBrowserInfo() {
+      const browser = Bowser.parse(window.navigator.userAgent)
+      console.log("browser ", `${browser.browser.name} ${browser.browser.version} ${browser.os.name} ${browser.os.versionName} ${browser.platform.type}`)
+      return `${browser.browser.name} ${browser.browser.version} ${browser.os.name} ${browser.os.versionName} ${browser.platform.type}`
+    },
     connect(params) {
       let self = this
-      console.log("params ", params)
-      const socket = new Socket("ws://104.248.20.26:4000/socket", {})
+
+      const device = this.getBrowserInfo()
+
+      const socket = new Socket("ws://192.168.1.5:4000/socket", {})
       socket.onOpen(event => console.log("connected"))
       socket.onError(event => console.log("cannot connect"))
       socket.onClose(event => console.log("socket closed"))
-      socket.connect({})
+      socket.connect()
 
-      const channel = socket.channel("room:" + params.channel_id)
-      localStorage.setItem('channel_id', params.channel_id)
+      const channel = socket.channel("room:" + params.channel_id, {device: device})
+      const presence = new Presence(channel)
+      presence.onSync(() => {
+        console.log("presence sync ", presence.list())
+      })
+      presence.onJoin((id, current, newPres) => {
+        if(!current){
+          console.log("user has entered for the first time", newPres)
+        } else {
+          console.log("user additional presence", newPres)
+        }
+      })
+
+      // detect if user has left from all tabs/devices, or is still present
+      presence.onLeave((id, current, leftPres) => {
+        if(current.metas.length === 0){
+          console.log("user has left from all devices", leftPres)
+        } else {
+          console.log("user left from a device", leftPres)
+        }
+      })
+
       channel.on("new_msg", msg => {
         console.log("got message ", msg)
         this.messages.push(msg.message)
       })
-      channel.on("last_10", data => {
+      channel.on("last_10_messages", data => {
         let conversations = data.conversations
         console.log("received last 10 messages ", conversations)
           this.conversations = conversations
-          this.activeConversation = this.conversations[0].messages.sort((a, b) => a.date - b.date)
           this.setActiveConversation(0)
-          // this.activeConversation = this.conversations[Object.keys(this.conversations)[0]].sort((a, b) => a.date - b.date)
-          // this.conversationSnippets = Object.keys(conversations).map(conv => {
-          //   return {sender: conversations[conv][0].person, address: conversations[conv][0].address, snippet: conversations[conv][0].body}
-          // })
           this.conversationSnippets = this.conversations.map(c => c.info)
       })
       channel.on("user_entered", data => {
@@ -102,16 +116,10 @@ export default {
         this.last10Messages()
         }
       })
+
       channel.join()
       .receive("ok", ({ messages }) => {
-         console.log("asfs up ", params.re_use)
-         console.log("reuse")
-         if (params.re_use) {
-           console.log("reuse")
-           self.isLoggedIn = true
-           self.last10Messages()
-         }
-        //  this.last10Messages()
+         console.log("joined")
       })
       .receive("error", ({ reason }) => console.log("failed join", reason))
       .receive("timeout", () => console.log("networking issue"))
@@ -120,24 +128,22 @@ export default {
     },
     last10Messages () {
       this.channel.push('last_10_messages', {}, 10000)
-        .receive('ok', (conversations) => {
-          console.log('last_10_messages ', conversations)
-        })
+        .receive("ok", (msg) => console.log("push last_10_messages", msg) )
     },
     send (message, address) {
-      console.log('send message: ', message, address)
       this.channel.push('send_sms', { message: message, to: address }, 10000)
-        .receive('ok', (msg) => {
-          console.log('created message ', msg)
-          this.messages.push(msg.message)
+        .receive('ok', ({messages}) => {
+          console.log('push send_sms ', messages)
+          this.activeConversation.messages.push({address: address, body: message, date: Date.now().toString(), read: "0"})
         })
-        .receive('error', ({ reason }) => console.log('failed join', reason))
+        .receive('error', ({ reason }) => console.log('failed send', reason))
         .receive('timeout', () => console.log('Networking issue. Still waiting...'))
     },
 
     setActiveConversation (index) {
-      console.log('snippet index ', index)
+      this.conversations[index].messages.sort((a, b) => a.date - b.date)
       this.activeConversation = this.conversations[index]
+
       this.setScrollPosition()
     },
     setScrollPosition () {

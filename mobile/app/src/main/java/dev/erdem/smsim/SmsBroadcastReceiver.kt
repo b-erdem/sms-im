@@ -16,7 +16,7 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
             val pdus = data!!.get("pdus") as Array<*>?
             for (i in pdus!!.indices) {
                 val smsMessage = Telephony.Sms.Intents.getMessagesFromIntent(intent)[i]
-                SmsPublisherService.pushMessage(context, from = smsMessage.emailFrom, body = smsMessage.messageBody, timestamp = smsMessage.timestampMillis.toString())
+                SmsPublisherService.pushMessage(context, from = smsMessage.originatingAddress, body = smsMessage.messageBody, timestamp = smsMessage.timestampMillis.toString())
             }
         }
     }

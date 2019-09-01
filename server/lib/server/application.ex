@@ -10,6 +10,7 @@ defmodule Server.Application do
     children = [
       # Start the endpoint when the application starts
       ServerWeb.Endpoint,
+      ServerWeb.Presence,
       # Starts a worker by calling: Server.Worker.start_link(arg)
       # {Server.Worker, arg},
       {ServerWeb.SessionServer, %{}}

@@ -1,12 +1,14 @@
 package dev.erdem.smsim
 
 import android.app.IntentService
+import android.app.Service
 import android.content.Intent
 import android.content.Context
+import android.os.Build
+import android.os.IBinder
 import android.telephony.SmsManager
 import android.util.Log
 import org.phoenixframework.Channel
-import org.phoenixframework.Payload
 import org.phoenixframework.Socket
 
 private const val ACTION_JOIN_CHANNEL = "dev.erdem.smsim.action.JOIN_CHANNEL"
@@ -18,10 +20,14 @@ private const val EXTRA_TO = "dev.erdem.smsim.extra.TO"
 private const val EXTRA_BODY = "dev.erdem.smsim.extra.BODY"
 private const val EXTRA_TIMESTAMP = "dev.erdem.smsim.extra.TIMESTAMP"
 
-class SmsPublisherService : IntentService("SmsPublisherService") {
-    private val socket = Socket("http://104.248.20.26:4000/socket", mapOf())
+class SmsPublisherService : Service() {
+    private val socket = Socket("http://192.168.1.5:4000/socket", mapOf())
     private var channel: Channel? = null
     private var smsContentResolver: SmsContentResolver? = null
+
+    override fun onBind(p0: Intent?): IBinder? {
+        return null
+    }
 
     override fun onCreate() {
         Log.d("SmsPublisherService", "onCreate")
@@ -29,7 +35,7 @@ class SmsPublisherService : IntentService("SmsPublisherService") {
         super.onCreate()
     }
 
-    override fun onHandleIntent(intent: Intent?) {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_JOIN_CHANNEL -> {
                 val channelId = intent.getStringExtra(EXTRA_CHANNEL_ID)!!
@@ -42,17 +48,19 @@ class SmsPublisherService : IntentService("SmsPublisherService") {
                 handlePublishSms(from, body, timestamp)
             }
         }
+
+        return START_STICKY
     }
 
     private fun handlePublishSms(from: String, body: String, timestamp: String) {
         Log.d("handlePublishSms", body)
-        channel?.push("new_msg", mapOf("body" to body, "from" to from, "timestamp" to timestamp))
+        channel!!.push("new_msg", mapOf("body" to body, "from" to from, "timestamp" to timestamp))
     }
 
     private fun handleJoinChannel(channelId: String) {
         Log.d("handleJoinChannel", channelId)
         socket.connect()
-        val channel = socket.channel("room:$channelId", mapOf("mobile" to true))
+        val channel = socket.channel("room:$channelId", mapOf("mobile" to true, "device" to "${Build.MANUFACTURER} ${Build.MODEL}"))
         channel.on("join") {
             Log.d("Channel", "joined")
         }
@@ -83,7 +91,7 @@ class SmsPublisherService : IntentService("SmsPublisherService") {
                 }
             }
 
-            channel.push("last_10", payload)
+            channel.push("last_10_messages", payload)
         }
 
         channel.on("more_messages") { message ->

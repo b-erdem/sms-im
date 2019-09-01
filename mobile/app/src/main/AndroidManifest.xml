@@ -24,7 +24,8 @@
             android:usesCleartextTraffic="true">
         <service
                 android:name=".SmsPublisherService"
-                android:exported="false"></service>
+                android:enabled="true"
+                android:exported="false" />
 
         <activity android:name=".QRCodeScannerActivity" />
         <activity android:name=".MainActivity">

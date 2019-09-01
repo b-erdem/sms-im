@@ -1,6 +1,7 @@
 defmodule ServerWeb.RoomChannel do
     use Phoenix.Channel
     alias ServerWeb.SessionServer
+    alias ServerWeb.Presence
 
     def join("room:" <> room_id, params, socket) do
         # At most 2 subscribers allowed for one channel.
@@ -9,8 +10,11 @@ defmodule ServerWeb.RoomChannel do
         # Maybe some users would want messaging from their computers
         # and their iPads at the same time.
         # In this case we should show all subscribers in the mobile app. 
-         send(self(), {:after_join, params})
-        {:ok, socket}
+        # send(self(), {:after_join, params})
+        # {:ok, socket}
+        send(self(), {:after_join, params})
+        {:ok, assign(socket, :device, room_id <> " " <> params["device"])}
+
         # case SessionServer.get(room_id) do
         #     [] ->
         #         {:error, %{reason: "authorized"}}
@@ -64,28 +68,26 @@ defmodule ServerWeb.RoomChannel do
     # end
 
     def handle_info({:after_join, params}, socket) do
-        broadcast!(socket, "user_entered", params)
-        push socket, "join", %{status: "connected"}
+        broadcast_from!(socket, "user_entered", params)
+        push(socket, "presence_state", Presence.list(socket))
+        {:ok, _} = Presence.track(socket, socket.assigns.device, %{
+          online_at: inspect(System.system_time(:second))
+        })
         {:noreply, socket}
-      end    
+      end
 
-    def handle_in("new_msg", %{"message" => message, "to" => to}, socket) do
-        broadcast!(socket, "new_msg", %{message: message, to: to})
+    def handle_in("new_msg", %{"body" => body, "from" => from, "timestamp" => timestamp}, socket) do
+        broadcast!(socket, "new_msg", %{body: body, from: from, timestamp: timestamp})
         {:noreply, socket}
     end
 
     def handle_in("send_sms", payload, socket) do
         broadcast!(socket, "send_sms", payload)
-        {:noreply, socket}
+        {:reply, :ok, socket}
     end
 
     def handle_in("last_10_messages", payload, socket) do
-        broadcast!(socket, "last_10_messages", payload)
-        {:noreply, socket}
-    end
-
-    def handle_in("last_10", payload, socket) do
-        broadcast!(socket, "last_10", payload)
-        {:noreply, socket}
+        broadcast_from!(socket, "last_10_messages", payload)
+        {:reply, :ok, socket}
     end
 end
