@@ -37,7 +37,6 @@ defmodule Server.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:pot, "~>0.10.1"},
       {:distillery, "~> 2.0"},
       {:eqrcode, "~> 0.1.6"},
       {:cors_plug, "~> 2.0"},

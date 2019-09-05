@@ -38,8 +38,7 @@ export default {
       socket: null,
       channels: [],
       channel: null,
-      conversations: {},
-      conversationSnippets: [],
+      conversations: [],
       activeConversation: null,
       svg: '',
       isLoggedIn: false
@@ -47,7 +46,7 @@ export default {
   },
 
   created () {
-      fetch('http://192.168.1.5:4000/api/auth/generate_qr_code')
+      fetch('http://192.168.1.8:4000/api/auth/generate_qr_code')
         .then(resp => resp.json())
         .then(data => {
           this.svg = data.qr_code_svg
@@ -59,6 +58,15 @@ export default {
       this.setScrollPosition()
     }
   },
+
+  computed: {
+    conversationSnippets () {
+      if (!this.conversations) return []
+      this.conversations.sort((a, b) => b.info.date - a.info.date)
+      return this.conversations.map(c => c.info)
+    }
+  },
+
   methods: {
     getBrowserInfo() {
       const browser = Bowser.parse(window.navigator.userAgent)
@@ -70,7 +78,7 @@ export default {
 
       const device = this.getBrowserInfo()
 
-      const socket = new Socket("ws://192.168.1.5:4000/socket", {})
+      const socket = new Socket("ws://192.168.1.8:4000/socket", {})
       socket.onOpen(event => console.log("connected"))
       socket.onError(event => console.log("cannot connect"))
       socket.onClose(event => console.log("socket closed"))
@@ -100,14 +108,18 @@ export default {
 
       channel.on("new_msg", msg => {
         console.log("got message ", msg)
-        this.messages.push(msg.message)
+        let conversationIndex = this.conversations.findIndex(conversation => msg.from === conversation.messages[0].address)
+        if (conversationIndex === -1) {
+          let newConversation = { info: {date: msg.timestamp, snippet: msg.body}, messages: []}
+          newConversation.messages.push({body: msg.body, type: '1', address: msg.from, date: msg.timestamp})
+        }
+        this.conversations[conversationIndex].messages.push({body: msg.body, type: '1', address: msg.from, date: msg.timestamp})
       })
       channel.on("last_10_messages", data => {
         let conversations = data.conversations
         console.log("received last 10 messages ", conversations)
           this.conversations = conversations
           this.setActiveConversation(0)
-          this.conversationSnippets = this.conversations.map(c => c.info)
       })
       channel.on("user_entered", data => {
         console.log("user_entered", data)
@@ -134,7 +146,9 @@ export default {
       this.channel.push('send_sms', { message: message, to: address }, 10000)
         .receive('ok', ({messages}) => {
           console.log('push send_sms ', messages)
-          this.activeConversation.messages.push({address: address, body: message, date: Date.now().toString(), read: "0"})
+          let now = Date.now().toString()
+          this.activeConversation.info.date = now
+          this.activeConversation.messages.push({address: address, body: message, date: now, read: "0"})
         })
         .receive('error', ({ reason }) => console.log('failed send', reason))
         .receive('timeout', () => console.log('Networking issue. Still waiting...'))

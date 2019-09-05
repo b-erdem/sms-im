@@ -11,7 +11,17 @@ use Mix.Config
 # before starting your production server.
 config :server, ServerWeb.Endpoint,
   http: [:inet6, port: System.get_env("PORT") || 4000],
-  url: [host: "localhost", port: System.get_env("PORT")],
+  url: [scheme: "https", host: "websms-backend.erdem.dev", port: 443],
+  https: [
+    :inet6,
+    port: 443,
+    otp_app: :server,
+    keyfile: System.get_env("WEBSMS_APP_SSL_KEY_PATH"),
+    certfile: System.get_env("WEBSMS_APP_SSL_CERT_PATH"),
+    # OPTIONAL Key for intermediate certificates:
+    # cacertfile: System.get_env("INTERMEDIATE_CERTFILE_PATH")
+  ],
+  force_ssl: [hsts: true],
   server: true,
   root: ".",
   version: Application.spec(:server, :vsn)
