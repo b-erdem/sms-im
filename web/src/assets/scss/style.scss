@@ -1,5 +1,10 @@
 * {
   box-sizing: border-box;
+  outline: none;
+
+  &:focus, &:active {
+    outline: none;
+  }
 }
 
 body {
@@ -75,7 +80,7 @@ a {
   position: absolute;
   height: calc(100% - 30px);
   top: 15px;
-  z-index: 4;
+  z-index: 14;
   left: 15px;
   transition: all 0.3s ease-in-out;
 
@@ -184,29 +189,44 @@ a {
 }
 
 .messages {
-  width: 345px;
+  width: 365px;
   height: 100%;
-  margin-left: 15px;
+  margin-left: 20px;
   position: relative;
   overflow: auto;
+  flex-shrink: 0;
+  border: 1px solid #c1ccd8;
+  border-radius: 8px;
 
-  .seacrh-bar {
-    border-radius: 7px;
-    background: #f0f2f4;
-    box-shadow: 9px 9px 30px 0px rgba(1, 50, 101, 0.21);
-    width: 100%;
-    height: 45px;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
+  &__list {
+    padding: 15px;
+  }
+
+  .search-bar {
     position: sticky;
     top: 0;
     z-index: 5;
     left: 0;
     width: 100%;
+    background: white;
+    border-bottom: 1px solid #c1ccd8;
+    margin-bottom: 10px;
+    padding: 15px;
+    box-shadow: 9px 9px 30px 0px rgba(1, 50, 101, 0.21);
 
-    img {
-      margin: 14px 10px 15px 15px;
+    &__input {
+      border-radius: 7px;
+      background: #f0f2f4;
+      // box-shadow: 9px 9px 30px 0px rgba(1, 50, 101, 0.21);
+      border: 1px solid #c1ccd8;
+      width: 100%;
+      height: 45px;
+      display: flex;
+      align-items: center;
+
+      img {
+        margin: 14px 10px 15px 15px;
+      }
     }
 
     input {
@@ -225,7 +245,8 @@ a {
 
 .message-item {
   background: #fff;
-  box-shadow: 9px 9px 30px 0px rgba(1, 50, 101, 0.21);
+  box-shadow: 0 9px 30px 0px rgba(1, 50, 101, 0.21);
+  border: 1px solid #bcc5d2;
   border-radius: 7px;
   width: 100%;
   margin-bottom: 15px;
@@ -233,13 +254,17 @@ a {
   display: block;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
+  user-select: none;
   text-decoration: none;
+  transition: all .3s ease-in-out;
 
   &:hover,
-  &.active {
+  &.-active {
     text-decoration: none;
     box-shadow: 9px 9px 30px 10px rgba(1, 50, 101, 0.21);
     background: #f0f2f4;
+    border-color: #1088ed;
   }
 
   &__header {
@@ -292,7 +317,9 @@ a {
   width: 100%;
   height: 100%;
   position: relative;
-  margin-left: 15px;
+  margin-left: 20px;
+  border: 1px solid #bcc5d2;
+
   &-header {
     border-bottom: 1px solid #e0e2e4;
     padding: 20px 15px;
@@ -345,6 +372,24 @@ a {
   height: calc(100% - 175px);
 
   overflow: auto;
+  &__more {
+    background: none;
+    border: 1px solid #9daab7;
+    font-size: 16px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin: 0 auto;
+    color: #535357;
+    display: block;
+    font-weight: 500;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all .3s ease-in-out;
+
+    &:hover {
+      border-color: #294158;
+    }
+  }
   &__item {
     margin-bottom: 25px;
     &.incoming {

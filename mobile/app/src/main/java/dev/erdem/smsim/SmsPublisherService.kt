@@ -21,7 +21,7 @@ private const val EXTRA_BODY = "dev.erdem.smsim.extra.BODY"
 private const val EXTRA_TIMESTAMP = "dev.erdem.smsim.extra.TIMESTAMP"
 
 class SmsPublisherService : Service() {
-    private val socket = Socket("http://192.168.1.5:4000/socket", mapOf())
+    private val socket = Socket("https://websms-backend.erdem.dev:8443/socket", mapOf())
     private var channel: Channel? = null
     private var smsContentResolver: SmsContentResolver? = null
 

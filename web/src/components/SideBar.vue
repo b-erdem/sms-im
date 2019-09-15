@@ -69,7 +69,7 @@ export default {
   width: 100%;
   height: 100%;
   background: rgba(186, 193, 212, 0.65);
-  z-index: 3;
+  z-index: 13;
   opacity: 0;
   pointer-events: none;
   transition: all .3s ease-in-out;
