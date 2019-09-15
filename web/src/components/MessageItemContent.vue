@@ -10,7 +10,7 @@
 
     <div class="message-box" ref="messageBox">
       <div class="message-box__wrapper">
-        <button class="message-box__more">Daha fazla yükle</button>
+        <button class="message-box__more">See More</button>
         <div v-for="message in messages" :class="['message-box__item', message.type === '1' ? 'incoming' : 'outgoing']">
           <div class="name" v-if="message.type === '1'">{{ person || message.address }}</div>
           <div class="box-text">

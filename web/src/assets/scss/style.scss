@@ -202,6 +202,25 @@ a {
     padding: 15px;
   }
 
+  &__more {
+    background: none;
+    border: 1px solid #9daab7;
+    font-size: 16px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin: 0 auto;
+    color: #535357;
+    display: block;
+    font-weight: 500;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all .3s ease-in-out;
+
+    &:hover {
+      border-color: #294158;
+    }
+  }
+
   .search-bar {
     position: sticky;
     top: 0;
