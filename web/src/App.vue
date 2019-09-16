@@ -8,17 +8,18 @@
         <div class="messages__list">
           <message-list-item
             :class="{ '-active' : activeConversationIndex === $index }"
-            v-on:click.native="setActiveConversation($index)" v-for="(snippet, $index) in conversationSnippets" :snippet="snippet" :key="snippet.person" />
-          <button class="message-box__more">See More</button>
+            v-on:click.native="activeConversationIndex = $index" v-for="(snippet, $index) in conversationSnippets" :snippet="snippet" :key="snippet.person" />
+          <button @click="recentConversations(conversations.length)" class="message-box__more">See More</button>
         </div>
       </div>
       <message-item-content
         :is-reach-top="isReachTop"
-        v-if="activeConversation"
+        v-if="conversations.length > 0"
         ref="messageContent"
         @onSend="send"
-        :messages="activeConversation.messages"
-        :person="activeConversation.info.person"
+        @onSeeMoreMessages="seeMoreMessages"
+        :messages="conversations[activeConversationIndex].messages"
+        :info="conversations[activeConversationIndex].info"
       />
     </div>
   </div>
@@ -45,13 +46,9 @@ export default {
   },
   data () {
     return {
-      messages: [],
-      msg: '',
       socket: null,
-      channels: [],
       channel: null,
       conversations: [],
-      activeConversation: null,
       activeConversationIndex: 0,
       svg: '',
       isLoggedIn: false,
@@ -127,17 +124,22 @@ export default {
         }
         this.conversations[conversationIndex].messages.push({ body: msg.body, type: '1', address: msg.from, date: msg.timestamp })
       })
-      channel.on('last_10_messages', data => {
+      channel.on('recent_conversations', data => {
         let conversations = data.conversations
-        console.log('received last 10 messages ', conversations)
-        this.conversations = conversations
-        this.setActiveConversation(0)
+        console.log('received recent_conversations ', conversations)
+        this.conversations = this.conversations.concat(conversations)
+      })
+      channel.on("more_messages", messages => {
+        let threadId = Object.keys(messages)[0]
+        let conversationIndex = this.conversations.findIndex(conversation => conversation.info.thread_id === threadId)
+        this.conversations[conversationIndex].messages = messages[threadId].concat(this.conversations[conversationIndex].messages)
+        this.conversations[conversationIndex].messages.sort((a, b) => a.date - b.date)
       })
       channel.on('user_entered', data => {
         console.log('user_entered', data)
         if (data.mobile) {
           this.isLoggedIn = true
-          this.last10Messages()
+          this.recentConversations()
         }
       })
 
@@ -150,17 +152,17 @@ export default {
       this.socket = socket
       this.channel = channel
     },
-    last10Messages () {
-      this.channel.push('last_10_messages', {}, 10000)
-        .receive('ok', (msg) => console.log('push last_10_messages', msg))
+    recentConversations (position = 0) {
+      this.channel.push('recent_conversations', {position: position}, 10000)
+        .receive('ok', (msg) => console.log('push recent_conversations', msg))
     },
     send (message, address) {
       this.channel.push('send_sms', { message: message, to: address }, 10000)
         .receive('ok', ({ messages }) => {
           console.log('push send_sms ', messages)
           let now = Date.now().toString()
-          this.activeConversation.info.date = now
-          this.activeConversation.messages.push({ address: address, body: message, date: now, read: '0' })
+          this.conversations[activeConversationIndex].info.date = now
+          this.conversations[activeConversationIndex].messages.push({ address: address, body: message, date: now, read: '0' })
           this.setScrollPosition()
         })
         .receive('error', ({ reason }) => console.log('failed send', reason))
@@ -169,7 +171,6 @@ export default {
 
     setActiveConversation (index) {
       this.conversations[index].messages.sort((a, b) => a.date - b.date)
-      this.activeConversation = this.conversations[index]
       this.activeConversationIndex = index
       this.setScrollPosition()
     },
@@ -179,6 +180,12 @@ export default {
           document.querySelector('.message-box').scrollTo(0, document.querySelector('.message-box__wrapper').offsetHeight)
         }
       });
+    },
+    seeMoreMessages (threadId, position) {
+      this.channel.push("more_messages", { threadId: threadId, position: position }, 10000)
+        .receive('ok', (messages) => {
+          console.log("more_messages ", "ok")
+        })
     }
   }
 }

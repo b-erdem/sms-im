@@ -86,8 +86,13 @@ defmodule ServerWeb.RoomChannel do
         {:reply, :ok, socket}
     end
 
-    def handle_in("last_10_messages", payload, socket) do
-        broadcast_from!(socket, "last_10_messages", payload)
+    def handle_in("recent_conversations", payload, socket) do
+        broadcast_from!(socket, "recent_conversations", payload)
+        {:reply, :ok, socket}
+    end
+
+    def handle_in("more_messages", payload, socket) do
+        broadcast_from!(socket, "more_messages", payload)
         {:reply, :ok, socket}
     end
 end

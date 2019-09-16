@@ -75,13 +75,18 @@ class SmsPublisherService : Service() {
             smsManager.sendMultipartTextMessage(to as String?, null, parts, null, null)
         }
 
-        channel.on("last_10_messages") {
-            Log.d("last_10_messages", "requested")
+        channel.on("recent_conversations") {
+            Log.d("recent_conversations", "requested")
+
+            var position = 0
+
+            if (it.payload["position"] as? Double != null) {
+                position = (it.payload["position"] as? Double)!!.toInt()
+            }
 
             val payload = mutableMapOf<String, MutableList<SmsConversation>>()
             payload["conversations"] = mutableListOf()
-            Log.d("last_10_messages", "requested")
-            val conversations = smsContentResolver?.getConversations()
+            val conversations = smsContentResolver?.getConversations(position)
             Log.i("conversations length", conversations?.size.toString())
             if (conversations != null) {
                 for (conversation in conversations) {
@@ -91,25 +96,23 @@ class SmsPublisherService : Service() {
                 }
             }
 
-            channel.push("last_10_messages", payload)
+            channel.push("recent_conversations", payload)
         }
 
-        channel.on("more_messages") { message ->
+        channel.on("more_messages") {
             Log.d("more_messages", "requested")
-            val threadId = message.payload["threadId"] as String
-            val position = message.payload["position"] as Int
-            val count = message.payload["count"] as Int
+            val payload = it.payload
+            val threadId = payload["threadId"] as? String
+            val position = payload["position"] as? Double
 
-            val messages = smsContentResolver?.getMessagesByThreadId(threadId, position, count)
+            Log.i("more_messages_info", "threadId $threadId position $position")
 
-            channel.push("more_messages_reply",
-                mapOf(threadId to messages!!)
+            val messages = smsContentResolver?.getMessagesByThreadId(threadId!!, position!!.toInt())
+            Log.i("more_messages", messages.toString())
+
+            channel.push("more_messages",
+                mapOf(threadId!! to messages!!)
             )
-        }
-
-        channel.on("thread_by_phone") { message ->
-            val phoneNumber = message.payload["phoneNumber"] as String
-
         }
 
         channel.join().receive("ok") {
