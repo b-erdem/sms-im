@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity
 
 import android.Manifest
 import android.app.Activity
+import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -13,6 +15,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 data class SmsConversation(val info: SmsConversationInfo, val messages: List<SmsMessage>)
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var mServiceIntent: Intent
+    private var smsPublisherService: SmsPublisherService? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -20,6 +25,13 @@ class MainActivity : AppCompatActivity() {
         qr_code_button.setOnClickListener {
             val intent = Intent(this, QRCodeScannerActivity::class.java)
             startActivityForResult(intent, 1)
+        }
+
+        smsPublisherService = SmsPublisherService(/*getApplicationContext() */)
+        mServiceIntent = Intent(applicationContext, smsPublisherService!!.javaClass)
+
+        if (!isSmsServiceRunning(smsPublisherService!!.javaClass)) {
+            startService(mServiceIntent)
         }
 
         val permissions = arrayOf(
@@ -45,5 +57,20 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity.onActivityResult", "Couldn't detect QR Code.")
             }
         }
+    }
+
+    private fun isSmsServiceRunning(serviceClass: Class<*>): Boolean {
+        val mgr = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (serviceInfo in mgr.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.name == serviceInfo.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
+    override fun onDestroy() {
+        stopService(mServiceIntent)
+        super.onDestroy()
     }
 }
