@@ -22,8 +22,8 @@
     </div>
 
     <div class="message-form">
-      <input v-model="msg" type="text" placeholder="Type your message here" v-on:keyup.enter="$emit('onSend', msg, messages[0].address); msg= ''" />
-      <img src="@/assets/img/submit.png" alt />
+      <input v-model="msg" type="text" placeholder="Type your message here" v-on:keyup.enter="sendMessage" />
+      <img src="@/assets/img/submit.png" alt @click="sendMessage"/>
     </div>
   </div>
 </template>
@@ -37,19 +37,33 @@ export default {
   data () {
     return {
       msg: '',
-      currentScrollPosition: null
+      currentScrollPosition: null,
+      isMessageSended: false
     }
   },
   methods: {
+    sendMessage () {
+      this.$emit('onSend', this.msg, this.messages[0].address)
+      this.msg= ''
+      document.querySelector('.message-box').scrollTo(0, document.querySelector('.message-box__wrapper').offsetHeight)
+      this.isMessageSended = true
+    },
     seeMore () {
       this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight;
       this.$emit('onSeeMoreMessages', this.info.thread_id, this.messages.length)
     }
   },
-  updated () {
-    let scrollPosition = document.querySelector('.message-box__wrapper').offsetHeight - this.currentScrollPosition
-    document.querySelector('.message-box').scrollTo(0, scrollPosition)
-    this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight;
+  watch: {
+    messages () {
+      this.$nextTick(() => {
+        if (!this.isMessageSended) {
+          let scrollPosition = document.querySelector('.message-box__wrapper').offsetHeight - this.currentScrollPosition
+          document.querySelector('.message-box').scrollTo(0, scrollPosition)
+          this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight;
+          this.isMessageSended = false
+        }
+      });
+    }
   }
 }
 </script>
