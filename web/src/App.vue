@@ -137,8 +137,10 @@ export default {
         if (conversationIndex === -1) {
           let newConversation = { info: { date: msg.timestamp, snippet: msg.body }, messages: [] }
           newConversation.messages.push({ body: msg.body, type: '1', address: msg.from, date: msg.timestamp })
+          conversationIndex = 0
         }
         this.conversations[conversationIndex].messages.push({ body: msg.body, type: '1', address: msg.from, date: msg.timestamp })
+        this.setScrollPosition()
       })
       channel.on('recent_conversations', data => {
         let conversations = data.conversations
@@ -187,12 +189,13 @@ export default {
         .receive('timeout', () => console.log('Networking issue. Still waiting...'))
     },
     setActiveConversation (index) {
+      this.conversations[index].info.read = "1"
       this.conversations[index].messages.sort((a, b) => a.date - b.date)
       this.activeConversationIndex = index
       this.setScrollPosition()
     },
     setScrollPosition () {
-      this.$nextTick(() => {
+        this.$nextTick(() => {
         if (document.querySelector('.message-box__wrapper')) {
           document.querySelector('.message-box').scrollTo(0, document.querySelector('.message-box__wrapper').offsetHeight)
         }
@@ -222,11 +225,11 @@ export default {
       }
     },
     spawnNotification(body, title) {
-      var options = {
+      let options = {
           body: body,
           // icon: icon
       };
-      var n = new Notification(title, options);
+      let n = new Notification(title, options);
     }
   }
 }

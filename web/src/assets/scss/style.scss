@@ -2,7 +2,8 @@
   box-sizing: border-box;
   outline: none;
 
-  &:focus, &:active {
+  &:focus,
+  &:active {
     outline: none;
   }
 }
@@ -214,7 +215,7 @@ a {
     font-weight: 500;
     margin-bottom: 10px;
     cursor: pointer;
-    transition: all .3s ease-in-out;
+    transition: all 0.3s ease-in-out;
 
     &:hover {
       border-color: #294158;
@@ -259,7 +260,6 @@ a {
       }
     }
   }
-
 }
 
 .message-item {
@@ -276,7 +276,7 @@ a {
   cursor: pointer;
   user-select: none;
   text-decoration: none;
-  transition: all .3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 
   &:hover,
   &.-active {
@@ -284,6 +284,20 @@ a {
     box-shadow: 9px 9px 30px 10px rgba(1, 50, 101, 0.21);
     background: #f0f2f4;
     border-color: #1088ed;
+  }
+
+  &.-unread:after {
+    content: "";
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background-image: linear-gradient(90deg, #117ee7 0%, #108ef2 100%);
+    box-shadow: 5px 5px 30px 0px rgba(1, 50, 101, 0.21);
   }
 
   &__header {
@@ -318,11 +332,7 @@ a {
     top: 50px;
     border-radius: 50%;
     background-image: -moz-linear-gradient(90deg, #117ee7 0%, #108ef2 100%);
-    background-image: -webkit-linear-gradient(
-      90deg,
-      #117ee7 0%,
-      #108ef2 100%
-    );
+    background-image: -webkit-linear-gradient(90deg, #117ee7 0%, #108ef2 100%);
     background-image: -ms-linear-gradient(90deg, #117ee7 0%, #108ef2 100%);
     box-shadow: 5px 5px 30px 0px rgba(1, 50, 101, 0.21);
   }
@@ -381,7 +391,6 @@ a {
   }
 
   img {
-
     margin-top: 10px;
   }
 }
@@ -403,7 +412,7 @@ a {
     font-weight: 500;
     margin-bottom: 10px;
     cursor: pointer;
-    transition: all .3s ease-in-out;
+    transition: all 0.3s ease-in-out;
 
     &:hover {
       border-color: #294158;
@@ -454,7 +463,6 @@ a {
   }
 }
 
-
 .github-btn {
   position: absolute;
   right: 40px;
@@ -471,7 +479,7 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all .3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 
   &:hover {
     transform: scale(1.1);

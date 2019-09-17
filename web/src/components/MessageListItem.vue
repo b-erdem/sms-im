@@ -1,5 +1,5 @@
 <template>
-  <div class="message-item">
+  <div class="message-item" :class="{ '-unread' : Number(snippet.read) === 0 }">
     <div class="message-item__header">
       <div class="name">{{ snippet.person }}</div>
       <div class="date">1h ago</div>
