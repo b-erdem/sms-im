@@ -67,6 +67,10 @@ export default {
         this.svg = data.qr_code_svg
         this.connect(data)
       })
+
+    Notification.requestPermission().then(function(result) {
+      console.log(result);
+    });
   },
   watch: {
     activeConversation () {
@@ -121,6 +125,7 @@ export default {
 
       channel.on('new_msg', msg => {
         console.log('got message ', msg)
+        this.sendNotification(msg.body, msg.from)
         let conversationIndex = this.conversations.findIndex(conversation => msg.from === conversation.messages[0].address)
         if (conversationIndex === -1) {
           let newConversation = { info: { date: msg.timestamp, snippet: msg.body }, messages: [] }
@@ -173,7 +178,6 @@ export default {
         .receive('error', ({ reason }) => console.log('failed send', reason))
         .receive('timeout', () => console.log('Networking issue. Still waiting...'))
     },
-
     setActiveConversation (index) {
       this.conversations[index].messages.sort((a, b) => a.date - b.date)
       this.activeConversationIndex = index
@@ -191,6 +195,28 @@ export default {
         .receive('ok', (messages) => {
           console.log("more_messages ", "ok")
         })
+    },
+    sendNotification(body, title) {
+      if (!("Notification" in window)) {
+        alert("This browser does not support desktop notification");
+      }
+      else if (Notification.permission === "granted") {
+        this.spawnNotification(body, title)
+      }
+      else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(function (permission) {
+          if (permission === "granted") {
+            this.spawnNotification(body, title)
+          }
+        });
+      }
+    },
+    spawnNotification(body, title) {
+      var options = {
+          body: body,
+          // icon: icon
+      };
+      var n = new Notification(title, options);
     }
   }
 }
