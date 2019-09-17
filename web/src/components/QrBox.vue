@@ -8,7 +8,7 @@
       Align the QR code within the frame to scan.
       <!-- for app: "Place the code inside the frame" -->
     </div>
-    <a href="../../../resources/apk/app-debug.apk" target="_blank" class="qr-box__button" download>Get APK</a>
+    <a href="https://github.com/b-erdem/sms-im/blob/master/resources/apk/app-debug.apk" target="_blank" class="qr-box__button">Get APK</a>
   </div>
 </template>
 
