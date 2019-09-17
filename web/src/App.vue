@@ -22,6 +22,10 @@
         :info="conversations[activeConversationIndex].info"
       />
     </div>
+    <a href="https://github.com/b-erdem/sms-im" target="_blank" class="github-btn">
+      <img src="@/assets/img/github.svg" alt="" class="github-btn__icon">
+        See on GitHub
+    </a>
   </div>
 </template>
 
