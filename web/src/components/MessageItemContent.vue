@@ -44,12 +44,12 @@ export default {
   methods: {
     sendMessage () {
       this.$emit('onSend', this.msg, this.messages[0].address)
-      this.msg= ''
+      this.msg = ''
       document.querySelector('.message-box').scrollTo(0, document.querySelector('.message-box__wrapper').offsetHeight)
       this.isMessageSended = true
     },
     seeMore () {
-      this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight;
+      this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight
       this.$emit('onSeeMoreMessages', this.info.thread_id, this.messages.length)
     }
   },
@@ -59,10 +59,10 @@ export default {
         if (!this.isMessageSended) {
           let scrollPosition = document.querySelector('.message-box__wrapper').offsetHeight - this.currentScrollPosition
           document.querySelector('.message-box').scrollTo(0, scrollPosition)
-          this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight;
+          this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight
           this.isMessageSended = false
         }
-      });
+      })
     }
   }
 }

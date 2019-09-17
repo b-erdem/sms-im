@@ -75,9 +75,9 @@ export default {
         this.svg = data.qr_code_svg
         this.connect(data)
       })
-    Notification.requestPermission().then(function(result) {
-      console.log(result);
-    });
+    Notification.requestPermission().then(function (result) {
+      console.log(result)
+    })
   },
   watch: {
     activeConversation () {
@@ -148,7 +148,7 @@ export default {
         this.conversations = this.conversations.concat(conversations)
         this.setActiveConversation(this.activeConversationIndex)
       })
-      channel.on("more_messages", messages => {
+      channel.on('more_messages', messages => {
         let threadId = Object.keys(messages)[0]
         let conversationIndex = this.conversations.findIndex(conversation => conversation.info.thread_id === threadId)
         this.conversations[conversationIndex].messages = messages[threadId].concat(this.conversations[conversationIndex].messages)
@@ -172,7 +172,7 @@ export default {
       this.channel = channel
     },
     recentConversations (position = 0) {
-      this.channel.push('recent_conversations', {position: position}, 10000)
+      this.channel.push('recent_conversations', { position: position }, 10000)
         .receive('ok', (msg) => console.log('push recent_conversations', msg))
     },
     send (message, address) {
@@ -189,47 +189,45 @@ export default {
         .receive('timeout', () => console.log('Networking issue. Still waiting...'))
     },
     setActiveConversation (index) {
-      this.conversations[index].info.read = "1"
+      this.conversations[index].info.read = '1'
       this.conversations[index].messages.sort((a, b) => a.date - b.date)
       this.activeConversationIndex = index
       this.setScrollPosition()
     },
     setScrollPosition () {
-        this.$nextTick(() => {
+      this.$nextTick(() => {
         if (document.querySelector('.message-box__wrapper')) {
           document.querySelector('.message-box').scrollTo(0, document.querySelector('.message-box__wrapper').offsetHeight)
         }
-      });
+      })
     },
     seeMoreMessages (threadId, position) {
-      this.channel.push("more_messages", { threadId: threadId, position: position }, 10000)
+      this.channel.push('more_messages', { threadId: threadId, position: position }, 10000)
         .receive('ok', (messages) => {
-          console.log("more_messages ", "ok")
+          console.log('more_messages ', 'ok')
         })
     },
-    sendNotification(body, title) {
-      if(!this.isWindowsFocused) {
-        if (!("Notification" in window)) {
-          alert("This browser does not support desktop notification");
-        }
-        else if (Notification.permission === "granted") {
+    sendNotification (body, title) {
+      if (!this.isWindowsFocused) {
+        if (!('Notification' in window)) {
+          alert('This browser does not support desktop notification')
+        } else if (Notification.permission === 'granted') {
           this.spawnNotification(body, title)
-        }
-        else if (Notification.permission !== "denied") {
+        } else if (Notification.permission !== 'denied') {
           Notification.requestPermission().then(function (permission) {
-            if (permission === "granted") {
+            if (permission === 'granted') {
               this.spawnNotification(body, title)
             }
-          });
+          })
         }
       }
     },
-    spawnNotification(body, title) {
+    spawnNotification (body, title) {
       let options = {
-          body: body,
-          // icon: icon
-      };
-      let n = new Notification(title, options);
+        body: body
+        // icon: icon
+      }
+      let n = new Notification(title, options)
     }
   }
 }
