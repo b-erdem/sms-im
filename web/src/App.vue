@@ -166,8 +166,8 @@ export default {
         .receive('ok', ({ messages }) => {
           console.log('push send_sms ', messages)
           let now = Date.now().toString()
-          this.conversations[activeConversationIndex].info.date = now
-          this.conversations[activeConversationIndex].messages.push({ address: address, body: message, date: now, read: '0' })
+          this.conversations[this.activeConversationIndex].info.date = now
+          this.conversations[this.activeConversationIndex].messages.push({ address: address, body: message, date: now, read: '0' })
           this.setScrollPosition()
         })
         .receive('error', ({ reason }) => console.log('failed send', reason))
