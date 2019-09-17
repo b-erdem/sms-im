@@ -8,7 +8,7 @@
         <div class="messages__list">
           <message-list-item
             :class="{ '-active' : activeConversationIndex === $index }"
-            v-on:click.native="setActiveConversationIndex($index)" v-for="(snippet, $index) in conversationSnippets" :snippet="snippet" :key="snippet.person" />
+            v-on:click.native="setActiveConversation($index)" v-for="(snippet, $index) in conversationSnippets" :snippet="snippet" :key="snippet.person" />
           <button @click="recentConversations(conversations.length)" class="message-box__more">See More</button>
         </div>
       </div>
