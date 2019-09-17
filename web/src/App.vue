@@ -56,18 +56,25 @@ export default {
       activeConversationIndex: 0,
       svg: '',
       isLoggedIn: false,
-      isReachTop: false
+      isReachTop: false,
+      isWindowsFocused: true
     }
   },
 
   created () {
+    this.isWindowsFocused = !document.hidden
+    window.addEventListener('blur', () => {
+      this.isWindowsFocused = false
+    })
+    window.addEventListener('focus', () => {
+      this.isWindowsFocused = true
+    })
     fetch('https://websms-backend.erdem.dev:8443/api/auth/generate_qr_code')
       .then(resp => resp.json())
       .then(data => {
         this.svg = data.qr_code_svg
         this.connect(data)
       })
-
     Notification.requestPermission().then(function(result) {
       console.log(result);
     });
@@ -198,18 +205,20 @@ export default {
         })
     },
     sendNotification(body, title) {
-      if (!("Notification" in window)) {
-        alert("This browser does not support desktop notification");
-      }
-      else if (Notification.permission === "granted") {
-        this.spawnNotification(body, title)
-      }
-      else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(function (permission) {
-          if (permission === "granted") {
-            this.spawnNotification(body, title)
-          }
-        });
+      if(!this.isWindowsFocused) {
+        if (!("Notification" in window)) {
+          alert("This browser does not support desktop notification");
+        }
+        else if (Notification.permission === "granted") {
+          this.spawnNotification(body, title)
+        }
+        else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(function (permission) {
+            if (permission === "granted") {
+              this.spawnNotification(body, title)
+            }
+          });
+        }
       }
     },
     spawnNotification(body, title) {
