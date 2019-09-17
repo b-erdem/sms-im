@@ -38,7 +38,7 @@ There are a lot of features can be implemented. It would be great to choose and 
 * e2e encryption.
 
 # Acknowledgments
-Thanks to @muhammederdem for contributions to Web UI.
+Thanks to [@muhammederdem](https://github.com/muhammederdem) for contributions to Web UI.
 
 # Licensing
 SmsIM is released under the terms of the GNU Lesser General Public License v3.0 license.
