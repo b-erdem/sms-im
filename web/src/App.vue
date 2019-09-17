@@ -174,6 +174,7 @@ export default {
           this.conversations[this.activeConversationIndex].info.date = now
           this.conversations[this.activeConversationIndex].messages.push({ address: address, body: message, date: now, read: '0' })
           this.setScrollPosition()
+          this.setActiveConversation(0)
         })
         .receive('error', ({ reason }) => console.log('failed send', reason))
         .receive('timeout', () => console.log('Networking issue. Still waiting...'))

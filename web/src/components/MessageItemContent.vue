@@ -10,7 +10,7 @@
 
     <div class="message-box" ref="messageBox">
       <div class="message-box__wrapper">
-        <button @click="$emit('onSeeMoreMessages', info.thread_id, messages.length)" class="message-box__more">See More</button>
+        <button @click="seeMore" class="message-box__more">See More</button>
         <div v-for="message in messages" :class="['message-box__item', message.type === '1' ? 'incoming' : 'outgoing']">
           <div class="name" v-if="message.type === '1'">{{ info.person || message.address }}</div>
           <div class="box-text">
@@ -36,8 +36,20 @@ export default {
   },
   data () {
     return {
-      msg: ''
+      msg: '',
+      currentScrollPosition: null
     }
+  },
+  methods: {
+    seeMore () {
+      this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight;
+      this.$emit('onSeeMoreMessages', this.info.thread_id, this.messages.length)
+    }
+  },
+  updated () {
+    let scrollPosition = document.querySelector('.message-box__wrapper').offsetHeight - this.currentScrollPosition
+    document.querySelector('.message-box').scrollTo(0, scrollPosition)
+    this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight;
   }
 }
 </script>
