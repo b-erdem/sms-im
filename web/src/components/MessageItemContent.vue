@@ -11,7 +11,7 @@
     <div class="message-box" ref="messageBox">
       <div class="message-box__wrapper">
         <button @click="seeMore" class="message-box__more">See More</button>
-        <div v-for="message in messages" :class="['message-box__item', message.type === '1' ? 'incoming' : 'outgoing']">
+        <div v-for="(message, $index) in messages" :class="['message-box__item', message.type === '1' ? 'incoming' : 'outgoing']" :key="$index">
           <div class="name" v-if="message.type === '1'">{{ info.person || message.address }}</div>
           <div class="box-text">
             {{ message.body }}
@@ -41,6 +41,9 @@ export default {
       isMessageSended: false
     }
   },
+  mounted() {
+    console.log('mounted', this.isMessageSended);
+  },
   methods: {
     sendMessage () {
       this.$emit('onSend', this.msg, this.messages[0].address)
@@ -56,12 +59,15 @@ export default {
   watch: {
     messages () {
       this.$nextTick(() => {
+      console.log('watch', this.isMessageSended);
         if (!this.isMessageSended) {
           let scrollPosition = document.querySelector('.message-box__wrapper').offsetHeight - this.currentScrollPosition
           document.querySelector('.message-box').scrollTo(0, scrollPosition)
           this.currentScrollPosition = document.querySelector('.message-box__wrapper').offsetHeight
-          this.isMessageSended = false
+        } else {
+          document.querySelector('.message-box').scrollTo(0, document.querySelector('.message-box__wrapper').offsetHeight)
         }
+        this.isMessageSended = false
       })
     }
   }

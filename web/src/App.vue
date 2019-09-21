@@ -8,7 +8,7 @@
         <div class="messages__list">
           <message-list-item
             :class="{ '-active' : activeConversationIndex === $index }"
-            v-on:click.native="setActiveConversation($index)" v-for="(snippet, $index) in conversationSnippets" :snippet="snippet" :key="snippet.person" />
+            v-on:click.native="setActiveConversation($index)" v-for="(snippet, $index) in conversationSnippets" :snippet="snippet" :key="$index" />
           <button @click="recentConversations(conversations.length)" class="message-box__more">See More</button>
         </div>
       </div>
@@ -147,6 +147,7 @@ export default {
         console.log('received recent_conversations ', conversations)
         this.conversations = this.conversations.concat(conversations)
         this.setActiveConversation(this.activeConversationIndex)
+        this.setScrollPosition()
       })
       channel.on('more_messages', messages => {
         let threadId = Object.keys(messages)[0]
