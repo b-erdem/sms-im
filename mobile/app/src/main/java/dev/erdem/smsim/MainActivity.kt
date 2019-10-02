@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
                 val channelId = data!!.getStringExtra("channel_id")!!
                 SmsPublisherService.startJoinChannel(applicationContext, channelId)
             } else {
-                Log.d("MainActivity.onActivityResult", "Couldn't detect QR Code.")
+                Log.d("MainActivity", "Couldn't detect QR Code.")
             }
         }
     }
