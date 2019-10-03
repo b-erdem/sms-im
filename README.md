@@ -34,7 +34,7 @@ There are a lot of features can be implemented. It would be great to choose and 
 * Better feedback on mobile app.
 * Better authentication/authorization flow.
 * Persistent websocket connection. When user closed the tab, it must initiated new WebSocket connection for now.
-* WebSocket connection drops when user's phone sleeps.
+* ~~WebSocket connection drops when user's phone sleeps.~~
 * e2e encryption.
 
 # Acknowledgments
