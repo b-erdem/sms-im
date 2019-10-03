@@ -1,10 +1,12 @@
 package dev.erdem.smsim
 
-import android.app.Service
+import android.app.*
 import android.content.Intent
 import android.content.Context
+import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.telephony.SmsManager
 import android.util.Log
 import org.phoenixframework.Channel
@@ -12,6 +14,7 @@ import org.phoenixframework.Socket
 
 private const val ACTION_JOIN_CHANNEL = "dev.erdem.smsim.action.JOIN_CHANNEL"
 private const val ACTION_PUBLISH_SMS = "dev.erdem.smsim.action.PUBLISH_SMS"
+private const val ACTION_STOP_SERVICE = "dev.erdem.smsim.action.STOP_SERVICE"
 
 private const val EXTRA_CHANNEL_ID = "dev.erdem.smsim.extra.CHANNEL_ID"
 private const val EXTRA_FROM = "dev.erdem.smsim.extra.FROM"
@@ -23,15 +26,16 @@ class SmsPublisherService : Service() {
     private val socket = Socket("https://websms-backend.erdem.dev:8443/socket", mapOf())
     private var channel: Channel? = null
     private var smsContentResolver: SmsContentResolver? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
     }
 
     override fun onCreate() {
+        super.onCreate()
         Log.d("SmsPublisherService", "onCreate")
         smsContentResolver = SmsContentResolver(contentResolver)
-        super.onCreate()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -39,12 +43,41 @@ class SmsPublisherService : Service() {
             ACTION_JOIN_CHANNEL -> {
                 val channelId = intent.getStringExtra(EXTRA_CHANNEL_ID)!!
                 handleJoinChannel(channelId)
+                val notification = createNotification()
+                startForeground(1, notification)
+                wakeLock =
+                    (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+                        newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SmsPublisherService::lock").apply {
+                            acquire()
+                        }
+                    }
             }
             ACTION_PUBLISH_SMS -> {
                 val from = intent.getStringExtra(EXTRA_FROM)!!
                 val body = intent.getStringExtra(EXTRA_BODY)!!
                 val timestamp = intent.getStringExtra(EXTRA_TIMESTAMP)!!
                 handlePublishSms(from, body, timestamp)
+            }
+            ACTION_STOP_SERVICE -> {
+                try {
+                    Log.d("SmsPublisherService", "stop service")
+                    wakeLock?.let {
+                        if (it.isHeld) {
+                            it.release()
+                        }
+                    }
+                    wakeLock = null
+                    stopForeground(true)
+                    stopSelf()
+                    socket.disconnect()
+                    channel = null
+                    smsContentResolver = null
+                } catch (e: Exception) {
+                    Log.d("SmsPublisherService","Service stopped without being started: ${e.message}")
+                }
+            }
+            else -> {
+                Log.d("SmsPublisherService", "Service restarted by system")
             }
         }
 
@@ -121,6 +154,45 @@ class SmsPublisherService : Service() {
         this.channel = channel
     }
 
+    private fun createNotification(): Notification {
+        val notificationChannelId = "SMS PUBLISHER SERVICE CHANNEL"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channel = NotificationChannel(
+                notificationChannelId,
+                "Sms Publisher Service notifications channel",
+                NotificationManager.IMPORTANCE_HIGH
+            ).let {
+                it.description = "Sms Publisher Service Channel"
+                it.enableLights(true)
+                it.lightColor = Color.RED
+                it.enableVibration(true)
+                it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
+                it
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val pendingIntent: PendingIntent = Intent(this, MainActivity::class.java).let { notificationIntent ->
+            PendingIntent.getActivity(this, 0, notificationIntent, 0)
+        }
+
+        val builder: Notification.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(
+            this,
+            notificationChannelId
+        ) else Notification.Builder(this)
+
+        return builder
+            .setContentTitle("SmsIM")
+            .setContentText("Sms Messaging Service")
+            .setContentIntent(pendingIntent)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setTicker("Ticker text")
+            .setPriority(Notification.PRIORITY_HIGH) // for under android 26 compatibility
+            .build()
+    }
+
     companion object {
         @JvmStatic
         fun pushMessage(context: Context, from: String?, body: String?, timestamp: String?) {
@@ -140,6 +212,15 @@ class SmsPublisherService : Service() {
                 action = ACTION_JOIN_CHANNEL
                 putExtra(EXTRA_CHANNEL_ID, channelId)
             }
+            context.startService(intent)
+        }
+
+        @JvmStatic
+        fun destroy(context: Context) {
+            val intent = Intent(context, SmsPublisherService::class.java).apply {
+                action = ACTION_STOP_SERVICE
+            }
+
             context.startService(intent)
         }
     }

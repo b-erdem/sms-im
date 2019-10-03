@@ -4,9 +4,8 @@ import androidx.appcompat.app.AppCompatActivity
 
 import android.Manifest
 import android.app.Activity
-import android.app.ActivityManager
-import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -15,9 +14,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 data class SmsConversation(val info: SmsConversationInfo, val messages: List<SmsMessage>)
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var mServiceIntent: Intent
-    private var smsPublisherService: SmsPublisherService? = null
-
+    private var smsBroadcastReceiver = SmsBroadcastReceiver()
+    private var smsBroadcastReceiverFilter = IntentFilter("android.provider.Telephony.SMS_RECEIVED")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -25,13 +23,6 @@ class MainActivity : AppCompatActivity() {
         qr_code_button.setOnClickListener {
             val intent = Intent(this, QRCodeScannerActivity::class.java)
             startActivityForResult(intent, 1)
-        }
-
-        smsPublisherService = SmsPublisherService(/*getApplicationContext() */)
-        mServiceIntent = Intent(applicationContext, smsPublisherService!!.javaClass)
-
-        if (!isSmsServiceRunning(smsPublisherService!!.javaClass)) {
-            startService(mServiceIntent)
         }
 
         val permissions = arrayOf(
@@ -49,28 +40,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1) {
             if (resultCode == Activity.RESULT_OK) {
                 val channelId = data!!.getStringExtra("channel_id")!!
                 SmsPublisherService.startJoinChannel(applicationContext, channelId)
+                registerReceiver(smsBroadcastReceiver, smsBroadcastReceiverFilter)
             } else {
                 Log.d("MainActivity", "Couldn't detect QR Code.")
             }
         }
     }
 
-    private fun isSmsServiceRunning(serviceClass: Class<*>): Boolean {
-        val mgr = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        for (serviceInfo in mgr.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.name == serviceInfo.service.className) {
-                return true
-            }
-        }
-        return false
-    }
-
     override fun onDestroy() {
-        stopService(mServiceIntent)
+        Log.d("MainActivity", "destroyed")
+        unregisterReceiver(smsBroadcastReceiver)
+        SmsPublisherService.destroy(applicationContext)
+        stopService(Intent(this, SmsPublisherService.javaClass))
         super.onDestroy()
     }
 }
